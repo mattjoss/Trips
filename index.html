@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <title>Travelog</title>
+  </head>
+  <body>
+    <!-- Navigation -->
+    <header class="navbar">
+      <div class="logo">
+        <a href="/">TRAVELOG</a>
+      </div>
+      <nav class="nav-links">
+        <a href="#" class="nav-item">About</a>
+        <a href="#" class="nav-item">Places</a>
+      </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="hero" class="hero">
+      <div class="hero-content">
+        <h1>Wanderlust</h1>
+        <p>Capturing moments from around the globe</p>
+      </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="container">
+      <section class="trips-section">
+        <h2 class="section-title">Trips</h2>
+        <div id="trips-grid" class="trips-grid">
+          <!-- Trips will be injected here by JS -->
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

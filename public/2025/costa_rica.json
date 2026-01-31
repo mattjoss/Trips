@@ -1,0 +1,54 @@
+{
+    "id": "2025/costa_rica",
+    "title": "Costa Rica",
+    "date": "February 2025",
+    "timestamp": 1738312800,
+    "segments": [
+        {
+            "name": "Arenal",
+            "date": "February 1-3, 2025",
+            "sections": [
+                {
+                    "type": "markdown",
+                    "title": "Hiking around Arenal Volcano and relaxing in hot springs.",
+                    "markdown": "We started our trip in La Fortuna, a small town located at the base of the Arenal Volcano. We spent our days hiking around the volcano and exploring the surrounding rainforest. We also took a dip in some of the natural hot springs that are heated by the volcano. It was a great way to relax after a long day of hiking."
+                },
+                {
+                    "type": "media",
+                    "media": [
+                        {
+                            "type": "image",
+                            "url": "https://picsum.photos/id/1015/800/600",
+                            "caption": "A beautiful sunset over the rainforest"
+                        },
+                        {
+                            "type": "image",
+                            "url": "https://picsum.photos/id/1016/800/600",
+                            "caption": "A clever sunset over the rainforest"
+                        },
+                        {
+                            "type": "image",
+                            "url": "https://picsum.photos/id/1017/800/600",
+                            "caption": "A handsome sunset over the rainforest"
+                        },
+                        {
+                            "type": "image",
+                            "url": "https://picsum.photos/id/1018/800/600",
+                            "caption": "A fancy sunset over the rainforest"
+                        },
+                        {
+                            "type": "image",
+                            "url": "https://picsum.photos/id/1019/800/600",
+                            "caption": "A beautiful sunset over the rainforest"
+                        },
+                        {
+                            "type": "image",
+                            "url": "https://picsum.photos/id/1020/800/600",
+                            "caption": "A beautiful sunset over the rainforest"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

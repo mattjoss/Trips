@@ -1,0 +1,14 @@
+[
+    {
+        "title": "Costa Rica",
+        "year": "2025",
+        "image": "https://picsum.photos/id/1018/800/600",
+        "trip_details": "2025/costa_rica"
+    },
+    {
+        "title": "Barcelona, Lisbon , Paris",
+        "year": "2024-2025",
+        "image": "https://picsum.photos/id/1036/800/600",
+        "trip_details": "2024/barcelona_lisbon_paris"
+    }
+]

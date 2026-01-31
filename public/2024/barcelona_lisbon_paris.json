@@ -1,0 +1,37 @@
+{
+    "id": "2024/barcelona_lisbon_paris",
+    "title": "Barcelona, Lisbon, Paris",
+    "date": "December 2024 - January 2025",
+    "timestamp": 1738312800,
+    "segments": [
+        {
+            "name": "Barcelona",
+            "date": "December 2024 - January 2025",
+            "sections": [
+                {
+                    "type": "markdown",
+                    "title": "Barcelona",
+                    "markdown": "We started our trip in Barcelona, a city known for its art, architecture, and food. We spent our days exploring the city and trying all the different foods. It was a great way to start our trip."
+                },
+                {
+                    "type": "media",
+                    "media": [
+                        {
+                            "type": "image",
+                            "url": "https://picsum.photos/id/1015/600/400"
+                        },
+                        {
+                            "type": "video",
+                            "url": "https://picsum.photos/id/1016/600/400"
+                        }
+                    ]
+                },
+                {
+                    "type": "markdown",
+                    "title": "Lisbon",
+                    "markdown": "We then traveled to Lisbon, a city known for its history, culture, and food. We spent our days exploring the city and trying all the different foods. It was a great way to continue our trip."
+                }
+            ]
+        }
+    ]
+}
