@@ -28,6 +28,7 @@ struct TripDetailsView: View {
 
     // MARK: - Navigation
     @State private var selectedSegment: TripSegment?
+    @State private var selectedSegmentIndex: Int?
     @State private var isNavigatingToSegment = false
 
     // MARK: - Save state
@@ -305,10 +306,11 @@ struct TripDetailsView: View {
                     ForEach(Array(segments.enumerated()), id: \.offset) { index, segment in
                         Button {
                             selectedSegment = segment
+                            selectedSegmentIndex = index
                             isNavigatingToSegment = true
                         } label: {
                             HStack {
-                                Text(segment.name)
+                                Text(segment.name.trimmingCharacters(in: .whitespaces).isEmpty ? "Untitled Segment" : segment.name)
                                     .font(.system(size: 16, weight: .medium))
                                     .foregroundStyle(.white)
                                 Spacer()
@@ -345,8 +347,9 @@ struct TripDetailsView: View {
 
     private var addSegmentButton: some View {
         Button {
-            let newSegment = TripSegment(name: "New Segment", sections: [], date: nil)
+            let newSegment = TripSegment(name: "", sections: [], date: nil)
             selectedSegment = newSegment
+            selectedSegmentIndex = nil
             isNavigatingToSegment = true
         } label: {
             HStack(spacing: 8) {
@@ -556,7 +559,9 @@ struct TripDetailsView: View {
             return
         }
 
-        if let idx = details.segments.firstIndex(where: { $0.id == selectedSegment?.id }) {
+        if let idx = selectedSegmentIndex, idx < details.segments.count {
+            details.segments[idx] = updatedSegment
+        } else if let selectedSegment, let idx = details.segments.firstIndex(where: { $0.id == selectedSegment.id && !$0.id.isEmpty }) {
             details.segments[idx] = updatedSegment
         } else {
             details.segments.append(updatedSegment)

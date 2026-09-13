@@ -15,8 +15,9 @@ struct TripSegmentsView: View {
     @Environment(\.dismiss) private var dismiss
 
     // MARK: - Header edit state
-    @State private var isHeaderEditing = false
+    @State private var isHeaderEditing: Bool
     @State private var editName: String
+    @FocusState private var isNameFocused: Bool
 
     // MARK: - Section edit state
     @State private var editingMarkdownIndex: Int?
@@ -32,6 +33,7 @@ struct TripSegmentsView: View {
         self._segment = State(initialValue: segment)
         self.onSaved = onSaved
         self._editName = State(initialValue: segment.name)
+        self._isHeaderEditing = State(initialValue: segment.name.trimmingCharacters(in: .whitespaces).isEmpty)
     }
 
     var body: some View {
@@ -121,6 +123,13 @@ struct TripSegmentsView: View {
                 handlePickedMedia(items, for: index)
             }
         }
+        .onAppear {
+            if isHeaderEditing {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    isNameFocused = true
+                }
+            }
+        }
     }
 
     // MARK: - Header
@@ -134,8 +143,9 @@ struct TripSegmentsView: View {
                         .foregroundStyle(.white)
                         .textFieldStyle(.plain)
                         .autocorrectionDisabled()
+                        .focused($isNameFocused)
                 } else {
-                    Text(segment.name)
+                    Text(segment.name.trimmingCharacters(in: .whitespaces).isEmpty ? "Untitled Segment" : segment.name)
                         .font(.system(size: 28, weight: .bold, design: .rounded))
                         .foregroundStyle(.white)
                 }
@@ -145,6 +155,9 @@ struct TripSegmentsView: View {
                 Button {
                     if isHeaderEditing {
                         segment.name = editName
+                        isNameFocused = false
+                    } else {
+                        isNameFocused = true
                     }
                     isHeaderEditing.toggle()
                 } label: {

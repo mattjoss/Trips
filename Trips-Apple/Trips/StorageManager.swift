@@ -56,7 +56,9 @@ class StorageManager: ObservableObject {
         let ref = storage.reference().child("data/trips.json")
         let metadata = StorageMetadata()
         metadata.contentType = "application/json"
+        metadata.cacheControl = "no-cache, no-store, must-revalidate"
         _ = try await ref.putDataAsync(data, metadata: metadata)
+        _ = try await ref.updateMetadata(metadata)
     }
 
     // MARK: - Cover Image Upload
@@ -91,6 +93,8 @@ class StorageManager: ObservableObject {
         let ref = storage.reference().child("data/trips/\(tripDetailsId)/trip.json")
         let metadata = StorageMetadata()
         metadata.contentType = "application/json"
+        metadata.cacheControl = "no-cache, no-store, must-revalidate"
         _ = try await ref.putDataAsync(data, metadata: metadata)
+        _ = try await ref.updateMetadata(metadata)
     }
 }
