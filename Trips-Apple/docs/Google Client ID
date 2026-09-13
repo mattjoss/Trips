@@ -1,0 +1,23 @@
+Steps to Obtain Your Google Client ID
+Go to the Google Cloud Console
+Navigate to the Google Cloud Console in your web browser. Sign in with your Google account.
+Select or Create a Project
+From the project selector dashboard, select an existing project or create a new one for your iOS application.
+Configure the OAuth Consent Screen
+If you haven't done so already, you need to configure the consent screen. This is the prompt users will see asking for permission to access their information.
+In the left-hand menu, go to APIs & Services > OAuth consent screen.
+Select the User type (usually External for a public app) and click Create.
+Fill in the required app information (app name, user support email, etc.) and save your changes. You can leave the "Scopes" and "Test users" sections with default values for now.
+Create OAuth Client ID Credentials
+In the left-hand menu, go to APIs & Services > Credentials.
+Click the + CREATE CREDENTIALS button and select OAuth client ID.
+Under Application type, select iOS.
+Enter a Name for your OAuth client ID (this is just for your reference in the console).
+Enter your app's Bundle ID (e.g., com.yourcompany.yourappname) exactly as it appears in your Xcode project's Info.plist file.
+(Optional) You can also enter your App Store ID and Team ID if you have them, which are required for features like App Check.
+Click Create.
+Retrieve the Client ID
+Your new OAuth client ID will be displayed. Copy this Client ID string. This is the value you will use to configure Google Sign-In within your iOS app's Xcode project. 
+Google for Developers
+Google for Developers
+ +3
