@@ -1,6 +1,7 @@
 import { LitElement, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { TripDetails } from '../types';
+import { getTripDetailsUrl } from '../config';
 import '../components/trip-segment';
 
 @customElement('details-view')
@@ -32,7 +33,8 @@ export class DetailsView extends LitElement {
     this.loading = true;
     this.error = false;
     try {
-      const response = await fetch(`/${id}.json`);
+      const url = getTripDetailsUrl(id);
+      const response = await fetch(url);
       if (!response.ok) throw new Error('Trip not found');
       this.data = await response.json();
     } catch (err) {

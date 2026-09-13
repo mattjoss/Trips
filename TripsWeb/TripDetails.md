@@ -9,7 +9,16 @@ Array of objects with:
 - `image`: String - URL to cover image
 - `trip_details`: String - ID used for routing and fetching details (e.g. "2025/costa_rica")
 
-## Trip Details (e.g., `public/2025/costa_rica.json`)
+## Trip Details URL Structure
+Trip detail JSON files are fetched using the structure:
+`${root_url}/trips/${trip_details}/trip.json`
+
+For example:
+- `root_url`: `https://storage.googleapis.com/joss-travel-ios.firebasestorage.app/data/`
+- `trip_details`: `2026/test_sep_13`
+- Resulting URL: `https://storage.googleapis.com/joss-travel-ios.firebasestorage.app/data/trips/2026/test_sep_13/trip.json`
+
+## Trip Details Schema (`trip.json`)
 Object with:
 - `id`: String - Matching the trip_details ID
 - `title`: String - Full title
