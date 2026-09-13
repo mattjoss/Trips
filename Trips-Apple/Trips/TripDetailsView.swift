@@ -10,6 +10,7 @@ struct TripDetailsView: View {
     let existingTrip: Trip?
     let storageManager: StorageManager
     let onSaved: (Trip) -> Void
+    let onDeleted: (() -> Void)?
 
     @Environment(\.dismiss) private var dismiss
 
@@ -20,6 +21,11 @@ struct TripDetailsView: View {
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var editCoverImage: UIImage?
     @State private var editImageURL: String   // keeps the existing URL if not changed
+
+    // MARK: - Delete state
+    @State private var showingDeleteConfirmation = false
+    @State private var isDeleting = false
+    @State private var deleteError: String?
 
     // MARK: - Trip details (segments)
     @State private var tripDetails: TripDetails?
@@ -37,10 +43,11 @@ struct TripDetailsView: View {
 
     // MARK: - Init
 
-    init(existingTrip: Trip?, storageManager: StorageManager, onSaved: @escaping (Trip) -> Void) {
+    init(existingTrip: Trip?, storageManager: StorageManager, onSaved: @escaping (Trip) -> Void, onDeleted: (() -> Void)? = nil) {
         self.existingTrip = existingTrip
         self.storageManager = storageManager
         self.onSaved = onSaved
+        self.onDeleted = onDeleted
 
         let isNew = existingTrip == nil
         _isEditing = State(initialValue: isNew)
@@ -49,6 +56,7 @@ struct TripDetailsView: View {
         _editImageURL = State(initialValue: existingTrip?.image ?? "")
         _editCoverImage = State(initialValue: nil)
     }
+
 
     // MARK: - Body
 
@@ -65,21 +73,25 @@ struct TripDetailsView: View {
                             .padding(.top, 16)
                             .padding(.bottom, 32)
 
-                        segmentsSection
+                        if !isEditing {
+                            segmentsSection
+                        }
                     }
                     .padding(.bottom, 20)
                 }
 
-                // Fixed bottom button
-                VStack(spacing: 0) {
-                    Divider()
-                        .background(Color.white.opacity(0.1))
-                    
-                    addSegmentButton
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 20)
+                if !isEditing {
+                    // Fixed bottom button
+                    VStack(spacing: 0) {
+                        Divider()
+                            .background(Color.white.opacity(0.1))
+                        
+                        addSegmentButton
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 20)
+                    }
+                    .background(Color(hue: 0.58, saturation: 0.06, brightness: 0.09).ignoresSafeArea())
                 }
-                .background(Color(hue: 0.58, saturation: 0.06, brightness: 0.09).ignoresSafeArea())
             }
 
             NavigationLink(
@@ -96,6 +108,17 @@ struct TripDetailsView: View {
             if let trip = existingTrip {
                 loadDetails(for: trip.trip_details)
             }
+        }
+        .alert(
+            "Delete Trip",
+            isPresented: $showingDeleteConfirmation
+        ) {
+            Button("Cancel", role: .cancel) {}
+            Button("Delete", role: .destructive) {
+                deleteTrip()
+            }
+        } message: {
+            Text("Are you sure you want to delete '\(editTitle)'? This action cannot be undone.")
         }
     }
 
@@ -247,8 +270,36 @@ struct TripDetailsView: View {
                 }
             }
 
-            if let saveError {
-                Text(saveError)
+            if existingTrip != nil {
+                Button(role: .destructive) {
+                    showingDeleteConfirmation = true
+                } label: {
+                    HStack(spacing: 8) {
+                        if isDeleting {
+                            ProgressView()
+                                .tint(.red)
+                        } else {
+                            Image(systemName: "trash")
+                            Text("Delete Trip")
+                        }
+                    }
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(.red)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(Color.red.opacity(0.12))
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(Color.red.opacity(0.25), lineWidth: 1)
+                    )
+                }
+                .disabled(isDeleting || isSaving)
+                .padding(.top, 4)
+            }
+
+            if let error = saveError ?? deleteError {
+                Text(error)
                     .font(.caption)
                     .foregroundStyle(.red.opacity(0.85))
                     .multilineTextAlignment(.center)
@@ -580,4 +631,27 @@ struct TripDetailsView: View {
             }
         }
     }
+
+    private func deleteTrip() {
+        guard let existingTrip else { return }
+        isDeleting = true
+        deleteError = nil
+
+        Task {
+            do {
+                try await storageManager.deleteTrip(tripDetailsId: existingTrip.trip_details)
+                await MainActor.run {
+                    isDeleting = false
+                    onDeleted?()
+                    dismiss()
+                }
+            } catch {
+                await MainActor.run {
+                    deleteError = error.localizedDescription
+                    isDeleting = false
+                }
+            }
+        }
+    }
 }
+

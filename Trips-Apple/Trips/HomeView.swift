@@ -60,6 +60,9 @@ struct HomeView: View {
                                         if let idx = trips.firstIndex(where: { $0.trip_details == trip.trip_details }) {
                                             trips[idx] = updated
                                         }
+                                    },
+                                    onDeleted: {
+                                        trips.removeAll(where: { $0.trip_details == trip.trip_details })
                                     }
                                 )
                             } label: {

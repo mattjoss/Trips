@@ -97,4 +97,12 @@ class StorageManager: ObservableObject {
         _ = try await ref.putDataAsync(data, metadata: metadata)
         _ = try await ref.updateMetadata(metadata)
     }
+
+    /// Remove a trip from `data/trips.json` by its `trip_details` ID.
+    func deleteTrip(tripDetailsId: String) async throws {
+        var allTrips = (try? await fetchTrips()) ?? []
+        allTrips.removeAll(where: { $0.trip_details == tripDetailsId })
+        try await saveTrips(allTrips)
+    }
 }
+
