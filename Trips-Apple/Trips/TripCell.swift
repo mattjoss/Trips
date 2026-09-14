@@ -11,24 +11,32 @@ struct TripCell: View {
     var body: some View {
         ZStack(alignment: .bottomLeading) {
             // Background cover image
-            AsyncImage(url: URL(string: trip.image)) { phase in
-                switch phase {
-                case .success(let image):
-                    image
-                        .resizable()
-                        .scaledToFill()
-                case .failure:
-                    Rectangle()
-                        .fill(Color(hue: 0.58, saturation: 0.4, brightness: 0.25))
-                        .overlay(
-                            Image(systemName: "photo")
-                                .font(.largeTitle)
-                                .foregroundStyle(.white.opacity(0.3))
-                        )
-                default:
+            Group {
+                if trip.image.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     Rectangle()
                         .fill(Color(hue: 0.58, saturation: 0.3, brightness: 0.2))
-                        .overlay(ProgressView().tint(.white))
+                        .overlay(Text("No image").foregroundStyle(.white.opacity(0.65)))
+                } else {
+                    AsyncImage(url: URL(string: trip.image)) { phase in
+                        switch phase {
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .scaledToFill()
+                        case .failure:
+                            Rectangle()
+                                .fill(Color(hue: 0.58, saturation: 0.4, brightness: 0.25))
+                                .overlay(
+                                    Image(systemName: "photo")
+                                        .font(.largeTitle)
+                                        .foregroundStyle(.white.opacity(0.3))
+                                )
+                        default:
+                            Rectangle()
+                                .fill(Color(hue: 0.58, saturation: 0.3, brightness: 0.2))
+                                .overlay(ProgressView().tint(.white))
+                        }
+                    }
                 }
             }
             .frame(maxWidth: .infinity)

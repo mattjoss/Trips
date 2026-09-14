@@ -5,6 +5,8 @@
 
 import SwiftUI
 import PhotosUI
+import AVFoundation
+import UniformTypeIdentifiers
 
 struct TripSegmentsView: View {
     let tripDetailsId: String
@@ -117,7 +119,6 @@ struct TripSegmentsView: View {
                 }
             }
         }
-        .photosPicker(isPresented: .init(get: { activeMediaSectionIndex != nil }, set: { if !$0 { activeMediaSectionIndex = nil } }), selection: $selectedPhotos, matching: .images)
         .onChange(of: selectedPhotos) { _, items in
             if let index = activeMediaSectionIndex {
                 handlePickedMedia(items, for: index)
@@ -226,38 +227,47 @@ struct TripSegmentsView: View {
     }
 
     private func mediaSectionView(_ section: MediaSection, index: Int) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {
-                    ForEach(section.media) { item in
-                        AsyncImage(url: URL(string: item.url)) { phase in
-                            if let image = phase.image {
-                                image.resizable()
-                                    .scaledToFill()
-                            } else {
-                                Rectangle().fill(Color.white.opacity(0.1))
-                            }
-                        }
-                        .frame(width: (UIScreen.main.bounds.width - 32 - 36) / 3.5, height: (UIScreen.main.bounds.width - 32 - 36) / 3.5)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                    }
-
-                    Button {
-                        activeMediaSectionIndex = index
-                    } label: {
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color.white.opacity(0.2), style: StrokeStyle(lineWidth: 1, dash: [4]))
-                            .frame(width: (UIScreen.main.bounds.width - 32 - 36) / 3.5, height: (UIScreen.main.bounds.width - 32 - 36) / 3.5)
-                            .overlay(
-                                Image(systemName: "plus")
-                                    .foregroundStyle(.white.opacity(0.4))
-                            )
-                    }
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 12) {
+                PhotosPicker(
+                    selection: mediaSelectionBinding(for: index),
+                    maxSelectionCount: 20,
+                    matching: .any(of: [.images, .videos]),
+                    preferredItemEncoding: .current
+                ) {
+                    mediaAddTile
                 }
-                .padding(.horizontal, 16)
+
+                ForEach(section.media) { item in
+                    MediaThumbnail(item: item)
+                }
             }
         }
         .padding(.vertical, 8)
+    }
+
+    private var mediaTileSize: CGFloat {
+        (UIScreen.main.bounds.width - 32 - 36) / 3.5
+    }
+
+    private var mediaAddTile: some View {
+        RoundedRectangle(cornerRadius: 8)
+            .stroke(Color.white.opacity(0.2), style: StrokeStyle(lineWidth: 1, dash: [4]))
+            .frame(width: mediaTileSize, height: mediaTileSize)
+            .overlay(
+                Image(systemName: "plus")
+                    .foregroundStyle(.white.opacity(0.4))
+            )
+    }
+
+    private func mediaSelectionBinding(for index: Int) -> Binding<[PhotosPickerItem]> {
+        Binding(
+            get: { selectedPhotos },
+            set: { items in
+                activeMediaSectionIndex = index
+                selectedPhotos = items
+            }
+        )
     }
 
     // MARK: - Bottom Buttons
@@ -296,38 +306,49 @@ struct TripSegmentsView: View {
     }
 
     private func handlePickedMedia(_ items: [PhotosPickerItem], for index: Int) {
+        guard !items.isEmpty else { return }
+
         Task {
-            var newMediaItems: [MediaItem] = []
             for item in items {
                 if let data = try? await item.loadTransferable(type: Data.self) {
-                    // Upload to Firebase
                     let timestamp = Int(Date().timeIntervalSince1970 * 1000)
-                    let filename = "media_\(timestamp)_\(UUID().uuidString.prefix(4)).jpg"
+                    let contentType = item.supportedContentTypes.first
+                    let isVideo = contentType?.conforms(to: .movie) == true
+                    let fileExtension = contentType?.preferredFilenameExtension ?? (isVideo ? "mov" : "jpg")
+                    let mediaType = isVideo ? "video" : "image"
+                    let filename = "media_\(timestamp)_\(UUID().uuidString.prefix(4)).\(fileExtension)"
                     let path = "data/trips/\(tripDetailsId)/media/\(filename)"
-                    
+
                     do {
-                        let url = try await uploadMediaData(data, path: path)
-                        newMediaItems.append(MediaItem(url: url.absoluteString, caption: "", type: "image"))
+                        let url = try await uploadMediaData(
+                            data,
+                            path: path,
+                            contentType: contentType?.preferredMIMEType
+                        )
+                        await MainActor.run {
+                            guard segment.sections.indices.contains(index), case .media(var section) = segment.sections[index] else {
+                                return
+                            }
+                            section.media.append(MediaItem(url: url.absoluteString, caption: "", type: mediaType))
+                            segment.sections[index] = .media(section)
+                        }
                     } catch {
                         print("Failed to upload media: \(error)")
                     }
                 }
             }
-            
+
             await MainActor.run {
-                if case .media(var section) = segment.sections[index] {
-                    section.media.append(contentsOf: newMediaItems)
-                    segment.sections[index] = .media(section)
-                }
+                onSaved(segment)
                 selectedPhotos = []
                 activeMediaSectionIndex = nil
             }
         }
     }
 
-    private func uploadMediaData(_ data: Data, path: String) async throws -> URL {
+    private func uploadMediaData(_ data: Data, path: String, contentType: String?) async throws -> URL {
         return try await withCheckedThrowingContinuation { continuation in
-            storageManager.upload(data: data, path: path) { result in
+            storageManager.upload(data: data, path: path, contentType: contentType) { result in
                 continuation.resume(with: result)
             }
         }
@@ -339,5 +360,67 @@ struct TripSegmentsView: View {
         }
         onSaved(segment)
         dismiss()
+    }
+}
+
+private struct MediaThumbnail: View {
+    let item: MediaItem
+
+    private let size = (UIScreen.main.bounds.width - 32 - 36) / 3.5
+
+    var body: some View {
+        ZStack(alignment: .bottomTrailing) {
+            if item.type == "video" {
+                VideoThumbnail(url: URL(string: item.url))
+            } else {
+                AsyncImage(url: URL(string: item.url)) { phase in
+                    if let image = phase.image {
+                        image
+                            .resizable()
+                            .scaledToFill()
+                    } else {
+                        Rectangle().fill(Color.white.opacity(0.1))
+                    }
+                }
+            }
+
+            if item.type == "video" {
+                Image(systemName: "play.fill")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(.white)
+                    .padding(8)
+                    .background(.black.opacity(0.6))
+                    .clipShape(Circle())
+                    .padding(6)
+            }
+        }
+        .frame(width: size, height: size)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+}
+
+private struct VideoThumbnail: View {
+    let url: URL?
+    @State private var thumbnail: UIImage?
+
+    var body: some View {
+        Group {
+            if let thumbnail {
+                Image(uiImage: thumbnail)
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                Rectangle()
+                    .fill(Color.white.opacity(0.1))
+                    .overlay(ProgressView().tint(.white))
+            }
+        }
+        .task(id: url) {
+            guard let url else { return }
+            let asset = AVURLAsset(url: url)
+            let generator = AVAssetImageGenerator(asset: asset)
+            generator.appliesPreferredTrackTransform = true
+            thumbnail = try? UIImage(cgImage: generator.copyCGImage(at: .zero, actualTime: nil))
+        }
     }
 }

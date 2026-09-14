@@ -8,9 +8,16 @@ class StorageManager: ObservableObject {
     // MARK: - Generic Upload / Download
 
     /// Upload raw data to a Firebase Storage path and return the download URL.
-    func upload(data: Data, path: String, completion: @escaping (Result<URL, Error>) -> Void) {
+    func upload(
+        data: Data,
+        path: String,
+        contentType: String? = nil,
+        completion: @escaping (Result<URL, Error>) -> Void
+    ) {
         let storageRef = storage.reference().child(path)
-        storageRef.putData(data, metadata: nil) { _, error in
+        let metadata = StorageMetadata()
+        metadata.contentType = contentType
+        storageRef.putData(data, metadata: metadata) { _, error in
             if let error = error {
                 completion(.failure(error))
                 return
@@ -105,4 +112,3 @@ class StorageManager: ObservableObject {
         try await saveTrips(allTrips)
     }
 }
-

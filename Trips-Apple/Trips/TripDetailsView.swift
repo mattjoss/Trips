@@ -137,22 +137,30 @@ struct TripDetailsView: View {
     private var viewHeader: some View {
         ZStack(alignment: .bottomLeading) {
             // Background cover image
-            AsyncImage(url: URL(string: editImageURL)) { phase in
-                switch phase {
-                case .success(let image):
-                    image.resizable().scaledToFill()
-                case .failure:
-                    Rectangle()
-                        .fill(Color(hue: 0.58, saturation: 0.4, brightness: 0.25))
-                        .overlay(
-                            Image(systemName: "photo")
-                                .font(.largeTitle)
-                                .foregroundStyle(.white.opacity(0.3))
-                        )
-                default:
+            Group {
+                if editImageURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     Rectangle()
                         .fill(Color(hue: 0.58, saturation: 0.3, brightness: 0.2))
-                        .overlay(ProgressView().tint(.white))
+                        .overlay(Text("No image").foregroundStyle(.white.opacity(0.65)))
+                } else {
+                    AsyncImage(url: URL(string: editImageURL)) { phase in
+                        switch phase {
+                        case .success(let image):
+                            image.resizable().scaledToFill()
+                        case .failure:
+                            Rectangle()
+                                .fill(Color(hue: 0.58, saturation: 0.4, brightness: 0.25))
+                                .overlay(
+                                    Image(systemName: "photo")
+                                        .font(.largeTitle)
+                                        .foregroundStyle(.white.opacity(0.3))
+                                )
+                        default:
+                            Rectangle()
+                                .fill(Color(hue: 0.58, saturation: 0.3, brightness: 0.2))
+                                .overlay(ProgressView().tint(.white))
+                        }
+                    }
                 }
             }
             .frame(maxWidth: .infinity)
@@ -654,4 +662,3 @@ struct TripDetailsView: View {
         }
     }
 }
-
