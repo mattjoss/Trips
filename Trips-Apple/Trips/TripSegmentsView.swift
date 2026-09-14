@@ -30,6 +30,7 @@ struct TripSegmentsView: View {
     @State private var selectedPhotos: [PhotosPickerItem] = []
     @State private var activeMediaSectionIndex: Int?
     @State private var mediaBrowserSelection: MediaBrowserSelection?
+    @State private var pendingMediaDeletion: MediaDeletionRequest?
 
     init(tripDetailsId: String, storageManager: StorageManager, segment: TripSegment, onSaved: @escaping (TripSegment) -> Void) {
         self.tripDetailsId = tripDetailsId
@@ -41,111 +42,139 @@ struct TripSegmentsView: View {
     }
 
     var body: some View {
+        screenContent
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden(editingMarkdownIndex != nil)
+            .toolbar(mediaBrowserSelection == nil ? .visible : .hidden, for: .navigationBar)
+            .toolbarColorScheme(.dark, for: .navigationBar)
+            .toolbar { markdownEditorToolbar }
+            .onChange(of: selectedPhotos) { _, items in
+                if let index = activeMediaSectionIndex {
+                    handlePickedMedia(items, for: index)
+                }
+            }
+            .onAppear { focusSegmentNameIfNeeded() }
+            .alert("Delete Media?", isPresented: isPresentingMediaDeletion) {
+                Button("Cancel", role: .cancel) { }
+                Button("Delete", role: .destructive) {
+                    if let deletion = pendingMediaDeletion {
+                        deleteMediaItem(deletion.itemID, from: deletion.sectionIndex)
+                    }
+                }
+            } message: {
+                Text("Remove this item from the trip segment?")
+            }
+    }
+
+    private var screenContent: some View {
         ZStack {
             Color(hue: 0.58, saturation: 0.06, brightness: 0.09)
                 .ignoresSafeArea()
 
-            ScrollViewReader { proxy in
-                VStack(spacing: 0) {
-                    ScrollView {
-                        VStack(spacing: 24) {
-                            segmentHeaderSection
-                                .padding(.horizontal, 16)
-                                .padding(.top, 16)
+            segmentScrollContent
+            bottomActionBar
+            mediaBrowserOverlay
+        }
+    }
 
-                            sectionsList
-                        }
-                        .padding(.bottom, 100)
-                    }
-                    .onChange(of: editingMarkdownIndex) { _, index in
-                        guard let index else { return }
-                        // Wait for the inline editor to enter the view hierarchy before
-                        // moving it above the keyboard.
-                        DispatchQueue.main.async {
-                            withAnimation {
-                                proxy.scrollTo(markdownSectionAnchor(index), anchor: .top)
-                            }
-                            isMarkdownEditorFocused = true
-                        }
-                    }
+    private var segmentScrollContent: some View {
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(spacing: 24) {
+                    segmentHeaderSection
+                        .padding(.horizontal, 16)
+                        .padding(.top, 16)
+                    sectionsList
                 }
+                .padding(.bottom, 100)
             }
-
-            // Fixed bottom buttons
-            VStack {
-                Spacer()
-                HStack(spacing: 16) {
-                    addSectionButton(label: "Add Text", icon: "text.alignleft") {
-                        addNewMarkdownSection()
+            .onChange(of: editingMarkdownIndex) { _, index in
+                guard let index else { return }
+                DispatchQueue.main.async {
+                    withAnimation {
+                        proxy.scrollTo(markdownSectionAnchor(index), anchor: .top)
                     }
-                    addSectionButton(label: "Add Media", icon: "photo.on.rectangle") {
-                        addNewMediaSection()
-                    }
+                    isMarkdownEditorFocused = true
                 }
-                .padding(.horizontal, 16)
-                .padding(.bottom, 20)
-                .background(
-                    LinearGradient(
-                        colors: [.clear, Color(hue: 0.58, saturation: 0.06, brightness: 0.09)],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                    .frame(height: 100)
-                    .ignoresSafeArea()
-                )
-            }
-
-            if let selection = mediaBrowserSelection {
-                MediaBrowserView(
-                    media: mediaItems(in: selection.sectionIndex),
-                    selectedItemID: selection.itemID,
-                    onBack: {
-                        withAnimation(.spring(duration: 0.35)) {
-                            mediaBrowserSelection = nil
-                        }
-                    },
-                    onCaptionSaved: { itemID, caption in
-                        updateCaption(caption, for: itemID, in: selection.sectionIndex)
-                    }
-                )
-                .zIndex(1)
-                .transition(.opacity.combined(with: .scale(scale: 0.98)))
             }
         }
-        .navigationTitle("")
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(editingMarkdownIndex != nil)
-        .toolbar(mediaBrowserSelection == nil ? .visible : .hidden, for: .navigationBar)
-        .toolbarColorScheme(.dark, for: .navigationBar)
-        .toolbar {
-            if editingMarkdownIndex != nil {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
-                        cancelMarkdownEditing()
-                    }
-                    .foregroundStyle(.white.opacity(0.7))
+    }
+
+    private var bottomActionBar: some View {
+        VStack {
+            Spacer()
+            HStack(spacing: 16) {
+                addSectionButton(label: "Add Text", icon: "text.alignleft", action: addNewMarkdownSection)
+                addSectionButton(label: "Add Media", icon: "photo.on.rectangle", action: addNewMediaSection)
+            }
+            .padding(.horizontal, 16)
+            .padding(.bottom, 20)
+            .background(
+                LinearGradient(
+                    colors: [.clear, Color(hue: 0.58, saturation: 0.06, brightness: 0.09)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .frame(height: 100)
+                .ignoresSafeArea()
+            )
+        }
+    }
+
+    @ViewBuilder
+    private var mediaBrowserOverlay: some View {
+        if let selection = mediaBrowserSelection {
+            MediaBrowserView(
+                media: mediaItems(in: selection.sectionIndex),
+                selectedItemID: selection.itemID,
+                onBack: dismissMediaBrowser,
+                onCaptionSaved: { itemID, caption in
+                    updateCaption(caption, for: itemID, in: selection.sectionIndex)
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        saveMarkdownAndFinishEditing()
-                    }
+            )
+            .zIndex(1)
+            .transition(.opacity.combined(with: .scale(scale: 0.98)))
+        }
+    }
+
+    @ToolbarContentBuilder
+    private var markdownEditorToolbar: some ToolbarContent {
+        if editingMarkdownIndex != nil {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button("Cancel", action: cancelMarkdownEditing)
+                    .foregroundStyle(.white.opacity(0.7))
+            }
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button("Done", action: saveMarkdownAndFinishEditing)
                     .font(.system(size: 17, weight: .semibold))
                     .foregroundStyle(.white)
+            }
+        }
+    }
+
+    private func focusSegmentNameIfNeeded() {
+        guard isHeaderEditing else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            isNameFocused = true
+        }
+    }
+
+    private func dismissMediaBrowser() {
+        withAnimation(.spring(duration: 0.35)) {
+            mediaBrowserSelection = nil
+        }
+    }
+
+    private var isPresentingMediaDeletion: Binding<Bool> {
+        Binding(
+            get: { pendingMediaDeletion != nil },
+            set: { isPresented in
+                if !isPresented {
+                    pendingMediaDeletion = nil
                 }
             }
-        }
-        .onChange(of: selectedPhotos) { _, items in
-            if let index = activeMediaSectionIndex {
-                handlePickedMedia(items, for: index)
-            }
-        }
-        .onAppear {
-            if isHeaderEditing {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    isNameFocused = true
-                }
-            }
-        }
+        )
     }
 
     // MARK: - Header
@@ -274,6 +303,13 @@ struct TripSegmentsView: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(item.type == "video" ? "Open video" : "Open image")
+                    .contextMenu {
+                        Button(role: .destructive) {
+                            pendingMediaDeletion = MediaDeletionRequest(sectionIndex: index, itemID: item.id)
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    }
                 }
             }
         }
@@ -450,9 +486,26 @@ struct TripSegmentsView: View {
         onSaved(segment)
     }
 
+    private func deleteMediaItem(_ itemID: String, from sectionIndex: Int) {
+        guard segment.sections.indices.contains(sectionIndex), case .media(var section) = segment.sections[sectionIndex] else {
+            return
+        }
+
+        section.media.removeAll { $0.id == itemID }
+        segment.sections[sectionIndex] = .media(section)
+        onSaved(segment)
+    }
+
 }
 
 private struct MediaBrowserSelection: Identifiable {
+    let sectionIndex: Int
+    let itemID: String
+
+    var id: String { "\(sectionIndex)-\(itemID)" }
+}
+
+private struct MediaDeletionRequest: Identifiable {
     let sectionIndex: Int
     let itemID: String
 
