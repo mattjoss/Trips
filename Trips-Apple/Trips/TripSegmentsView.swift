@@ -6,6 +6,8 @@
 import SwiftUI
 import PhotosUI
 import AVFoundation
+import AVKit
+import UIKit
 import UniformTypeIdentifiers
 
 struct TripSegmentsView: View {
@@ -27,6 +29,7 @@ struct TripSegmentsView: View {
     // MARK: - Media Picker
     @State private var selectedPhotos: [PhotosPickerItem] = []
     @State private var activeMediaSectionIndex: Int?
+    @State private var mediaBrowserSelection: MediaBrowserSelection?
 
     init(tripDetailsId: String, storageManager: StorageManager, segment: TripSegment, onSaved: @escaping (TripSegment) -> Void) {
         self.tripDetailsId = tripDetailsId
@@ -91,10 +94,28 @@ struct TripSegmentsView: View {
                     .ignoresSafeArea()
                 )
             }
+
+            if let selection = mediaBrowserSelection {
+                MediaBrowserView(
+                    media: mediaItems(in: selection.sectionIndex),
+                    selectedItemID: selection.itemID,
+                    onBack: {
+                        withAnimation(.spring(duration: 0.35)) {
+                            mediaBrowserSelection = nil
+                        }
+                    },
+                    onCaptionSaved: { itemID, caption in
+                        updateCaption(caption, for: itemID, in: selection.sectionIndex)
+                    }
+                )
+                .zIndex(1)
+                .transition(.opacity.combined(with: .scale(scale: 0.98)))
+            }
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(editingMarkdownIndex != nil)
+        .toolbar(mediaBrowserSelection == nil ? .visible : .hidden, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
         .toolbar {
             if editingMarkdownIndex != nil {
@@ -244,7 +265,15 @@ struct TripSegmentsView: View {
                 }
 
                 ForEach(section.media) { item in
-                    MediaThumbnail(item: item)
+                    Button {
+                        withAnimation(.spring(duration: 0.35)) {
+                            mediaBrowserSelection = MediaBrowserSelection(sectionIndex: index, itemID: item.id)
+                        }
+                    } label: {
+                        MediaThumbnail(item: item)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(item.type == "video" ? "Open video" : "Open image")
                 }
             }
         }
@@ -403,6 +432,31 @@ struct TripSegmentsView: View {
         }
     }
 
+    private func mediaItems(in sectionIndex: Int) -> [MediaItem] {
+        guard segment.sections.indices.contains(sectionIndex), case .media(let section) = segment.sections[sectionIndex] else {
+            return []
+        }
+        return section.media
+    }
+
+    private func updateCaption(_ caption: String, for itemID: String, in sectionIndex: Int) {
+        guard segment.sections.indices.contains(sectionIndex), case .media(var section) = segment.sections[sectionIndex],
+              let itemIndex = section.media.firstIndex(where: { $0.id == itemID }) else {
+            return
+        }
+
+        section.media[itemIndex].caption = caption
+        segment.sections[sectionIndex] = .media(section)
+        onSaved(segment)
+    }
+
+}
+
+private struct MediaBrowserSelection: Identifiable {
+    let sectionIndex: Int
+    let itemID: String
+
+    var id: String { "\(sectionIndex)-\(itemID)" }
 }
 
 private struct MediaThumbnail: View {
@@ -463,6 +517,281 @@ private struct VideoThumbnail: View {
             let generator = AVAssetImageGenerator(asset: asset)
             generator.appliesPreferredTrackTransform = true
             thumbnail = try? UIImage(cgImage: generator.copyCGImage(at: .zero, actualTime: nil))
+        }
+    }
+}
+
+private struct MediaBrowserView: View {
+    let media: [MediaItem]
+    let selectedItemID: String
+    let onBack: () -> Void
+    let onCaptionSaved: (String, String) -> Void
+
+    @State private var selection: String?
+    @State private var isEditingCaption = false
+    @State private var caption = ""
+    @State private var captionBeforeEditing = ""
+    @State private var captionEditorHeight: CGFloat = 48
+    @State private var captionFocused = false
+
+    init(media: [MediaItem], selectedItemID: String, onBack: @escaping () -> Void, onCaptionSaved: @escaping (String, String) -> Void) {
+        self.media = media
+        self.selectedItemID = selectedItemID
+        self.onBack = onBack
+        self.onCaptionSaved = onCaptionSaved
+        _selection = State(initialValue: selectedItemID)
+    }
+
+    var body: some View {
+        ZStack {
+            Color.black.ignoresSafeArea()
+
+            TabView(selection: $selection) {
+                ForEach(media) { item in
+                    browserPage(for: item)
+                        .tag(Optional(item.id))
+                }
+            }
+            .tabViewStyle(.page(indexDisplayMode: .automatic))
+            .ignoresSafeArea()
+
+            VStack {
+                HStack {
+                    if isEditingCaption {
+                        Button("Cancel") { cancelCaptionEditing() }
+                        Spacer()
+                        Button("Done") { saveCaption() }
+                            .fontWeight(.semibold)
+                    } else {
+                        Button {
+                            onBack()
+                        } label: {
+                            Image(systemName: "chevron.backward")
+                                .font(.system(size: 18, weight: .semibold))
+                                .frame(width: 44, height: 44)
+                                .background(.black.opacity(0.45), in: Circle())
+                        }
+                        .accessibilityLabel("Back to trip segment")
+
+                        Spacer()
+                    }
+                }
+                .foregroundStyle(.white)
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
+
+                Spacer()
+
+                if isEditingCaption {
+                    ZStack(alignment: .topLeading) {
+                        if caption.isEmpty {
+                            Text("Add a Caption")
+                                .foregroundStyle(.white.opacity(0.45))
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 12)
+                                .allowsHitTesting(false)
+                        }
+
+                        GrowingCaptionTextView(text: $caption, height: $captionEditorHeight, isFocused: $captionFocused)
+                    }
+                    .frame(height: captionEditorHeight)
+                        .background(.white.opacity(0.16), in: RoundedRectangle(cornerRadius: 12))
+                        .padding(.horizontal, 20)
+                } else {
+                    Button { beginCaptionEditing() } label: {
+                        Text(displayedCaption)
+                            .font(.system(size: 17, weight: .medium))
+                            .foregroundStyle(hasCaption ? .white : .white.opacity(0.45))
+                            .multilineTextAlignment(.center)
+                            .frame(maxWidth: .infinity)
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 14)
+                    }
+                    .accessibilityLabel(hasCaption ? "Edit caption" : "Add a caption")
+                }
+            }
+            .padding(.bottom, 26)
+        }
+        .preferredColorScheme(.dark)
+        .onChange(of: selection) { _, _ in
+            if isEditingCaption { cancelCaptionEditing() }
+        }
+    }
+
+    @ViewBuilder
+    private func browserPage(for item: MediaItem) -> some View {
+        if item.type == "video", let url = URL(string: item.url) {
+            VideoPlayer(player: AVPlayer(url: url))
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else {
+            ZoomableImage(url: URL(string: item.url))
+        }
+    }
+
+    private func beginCaptionEditing() {
+        guard let item = currentItem else { return }
+        caption = item.caption
+        captionBeforeEditing = item.caption
+        captionEditorHeight = 48
+        isEditingCaption = true
+        DispatchQueue.main.async { captionFocused = true }
+    }
+
+    private func saveCaption() {
+        guard let item = currentItem else { return }
+        onCaptionSaved(item.id, caption)
+        captionFocused = false
+        isEditingCaption = false
+    }
+
+    private func cancelCaptionEditing() {
+        caption = captionBeforeEditing
+        captionFocused = false
+        isEditingCaption = false
+    }
+
+    private var currentItem: MediaItem? {
+        media.first(where: { $0.id == selection })
+    }
+
+    private var hasCaption: Bool {
+        !(currentItem?.caption.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
+    }
+
+    private var displayedCaption: String {
+        hasCaption ? (currentItem?.caption ?? "") : "Add a Caption"
+    }
+}
+
+private struct GrowingCaptionTextView: UIViewRepresentable {
+    @Binding var text: String
+    @Binding var height: CGFloat
+    @Binding var isFocused: Bool
+
+    func makeUIView(context: Context) -> UITextView {
+        let textView = UITextView()
+        textView.backgroundColor = .clear
+        textView.textColor = .white
+        textView.font = .preferredFont(forTextStyle: .body)
+        textView.adjustsFontForContentSizeCategory = true
+        textView.textContainerInset = UIEdgeInsets(top: 10, left: 10, bottom: 10, right: 10)
+        textView.textContainer.lineFragmentPadding = 0
+        textView.isScrollEnabled = false
+        textView.returnKeyType = .default
+        textView.delegate = context.coordinator
+        return textView
+    }
+
+    func updateUIView(_ textView: UITextView, context: Context) {
+        if textView.text != text {
+            textView.text = text
+        }
+        resize(textView)
+
+        if isFocused && !textView.isFirstResponder {
+            DispatchQueue.main.async { textView.becomeFirstResponder() }
+        } else if !isFocused && textView.isFirstResponder {
+            textView.resignFirstResponder()
+        }
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(parent: self)
+    }
+
+    private func resize(_ textView: UITextView) {
+        guard textView.bounds.width > 0 else {
+            DispatchQueue.main.async { resize(textView) }
+            return
+        }
+        let width = textView.bounds.width
+        let fittedHeight = textView.sizeThatFits(CGSize(width: width, height: .greatestFiniteMagnitude)).height
+        let newHeight = max(48, ceil(fittedHeight))
+        guard height != newHeight else { return }
+        DispatchQueue.main.async {
+            height = newHeight
+        }
+    }
+
+    final class Coordinator: NSObject, UITextViewDelegate {
+        var parent: GrowingCaptionTextView
+
+        init(parent: GrowingCaptionTextView) {
+            self.parent = parent
+        }
+
+        func textViewDidChange(_ textView: UITextView) {
+            parent.text = textView.text
+            parent.resize(textView)
+        }
+
+        func textViewDidBeginEditing(_ textView: UITextView) {
+            parent.isFocused = true
+        }
+    }
+}
+
+private struct ZoomableImage: View {
+    let url: URL?
+    @State private var scale: CGFloat = 1
+    @State private var scaleAtGestureStart: CGFloat = 1
+    @State private var offset: CGSize = .zero
+    @State private var offsetAtGestureStart: CGSize = .zero
+
+    var body: some View {
+        GeometryReader { geometry in
+            AsyncImage(url: url) { phase in
+                if let image = phase.image {
+                    image
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                        .scaleEffect(scale)
+                        .offset(offset)
+                        .gesture(magnificationGesture)
+                        .simultaneousGesture(panGesture)
+                        .onTapGesture(count: 2) { toggleZoom() }
+                } else if phase.error != nil {
+                    ContentUnavailableView("Unable to Load Image", systemImage: "exclamationmark.triangle")
+                        .foregroundStyle(.white)
+                } else {
+                    ProgressView().tint(.white)
+                }
+            }
+        }
+    }
+
+    private var magnificationGesture: some Gesture {
+        MagnificationGesture()
+            .onChanged { value in
+                scale = min(max(scaleAtGestureStart * value, 1), 5)
+            }
+            .onEnded { _ in
+                scaleAtGestureStart = scale
+                if scale == 1 { offset = .zero; offsetAtGestureStart = .zero }
+            }
+    }
+
+    private var panGesture: some Gesture {
+        DragGesture()
+            .onChanged { value in
+                guard scale > 1 else { return }
+                offset = CGSize(width: offsetAtGestureStart.width + value.translation.width,
+                                height: offsetAtGestureStart.height + value.translation.height)
+            }
+            .onEnded { _ in
+                guard scale > 1 else { return }
+                offsetAtGestureStart = offset
+            }
+    }
+
+    private func toggleZoom() {
+        withAnimation(.spring) {
+            if scale > 1 {
+                scale = 1; scaleAtGestureStart = 1; offset = .zero; offsetAtGestureStart = .zero
+            } else {
+                scale = 2.5; scaleAtGestureStart = 2.5
+            }
         }
     }
 }
