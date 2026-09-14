@@ -14,8 +14,6 @@ struct TripSegmentsView: View {
     @State var segment: TripSegment
     let onSaved: (TripSegment) -> Void
 
-    @Environment(\.dismiss) private var dismiss
-
     // MARK: - Header edit state
     @State private var isHeaderEditing: Bool
     @State private var editName: String
@@ -23,7 +21,8 @@ struct TripSegmentsView: View {
 
     // MARK: - Section edit state
     @State private var editingMarkdownIndex: Int?
-    @State private var isShowingTextEditor = false
+    @State private var markdownTextBeforeEditing: String?
+    @FocusState private var isMarkdownEditorFocused: Bool
 
     // MARK: - Media Picker
     @State private var selectedPhotos: [PhotosPickerItem] = []
@@ -43,16 +42,29 @@ struct TripSegmentsView: View {
             Color(hue: 0.58, saturation: 0.06, brightness: 0.09)
                 .ignoresSafeArea()
 
-            VStack(spacing: 0) {
-                ScrollView {
-                    VStack(spacing: 24) {
-                        segmentHeaderSection
-                            .padding(.horizontal, 16)
-                            .padding(.top, 16)
+            ScrollViewReader { proxy in
+                VStack(spacing: 0) {
+                    ScrollView {
+                        VStack(spacing: 24) {
+                            segmentHeaderSection
+                                .padding(.horizontal, 16)
+                                .padding(.top, 16)
 
-                        sectionsList
+                            sectionsList
+                        }
+                        .padding(.bottom, 100)
                     }
-                    .padding(.bottom, 100)
+                    .onChange(of: editingMarkdownIndex) { _, index in
+                        guard let index else { return }
+                        // Wait for the inline editor to enter the view hierarchy before
+                        // moving it above the keyboard.
+                        DispatchQueue.main.async {
+                            withAnimation {
+                                proxy.scrollTo(markdownSectionAnchor(index), anchor: .top)
+                            }
+                            isMarkdownEditorFocused = true
+                        }
+                    }
                 }
             }
 
@@ -82,40 +94,22 @@ struct TripSegmentsView: View {
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(editingMarkdownIndex != nil)
         .toolbarColorScheme(.dark, for: .navigationBar)
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Done") {
-                    saveAndDismiss()
-                }
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(.white)
-            }
-        }
-        .fullScreenCover(isPresented: $isShowingTextEditor) {
-            if let index = editingMarkdownIndex {
-                let binding = Binding(
-                    get: {
-                        if case .markdown(let s) = segment.sections[index] {
-                            return s.markdown
-                        }
-                        return ""
-                    },
-                    set: { newValue in
-                        if case .markdown(var s) = segment.sections[index] {
-                            s.markdown = newValue
-                            segment.sections[index] = .markdown(s)
-                        }
+            if editingMarkdownIndex != nil {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        cancelMarkdownEditing()
                     }
-                )
-                TextEditorView(text: binding) {
-                    isShowingTextEditor = false
-                    editingMarkdownIndex = nil
-                } onCancel: {
-                    isShowingTextEditor = false
-                    editingMarkdownIndex = nil
-                    // If it was a new empty section, maybe remove it? 
-                    // For now keeping it simple.
+                    .foregroundStyle(.white.opacity(0.7))
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        saveMarkdownAndFinishEditing()
+                    }
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(.white)
                 }
             }
         }
@@ -157,6 +151,7 @@ struct TripSegmentsView: View {
                     if isHeaderEditing {
                         segment.name = editName
                         isNameFocused = false
+                        onSaved(segment)
                     } else {
                         isNameFocused = true
                     }
@@ -200,30 +195,40 @@ struct TripSegmentsView: View {
 
     private func markdownSectionView(_ section: MarkdownSection, index: Int) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack {
-                Spacer()
-                Button {
-                    editingMarkdownIndex = index
-                    isShowingTextEditor = true
-                } label: {
-                    Image(systemName: "pencil")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.6))
-                        .padding(6)
-                        .background(Color.white.opacity(0.1))
-                        .clipShape(Circle())
+            if editingMarkdownIndex == index {
+                TextEditor(text: markdownBinding(for: index))
+                    .font(.body)
+                    .foregroundStyle(.white)
+                    .scrollContentBackground(.hidden)
+                    .focused($isMarkdownEditorFocused)
+                    .frame(minHeight: 180, alignment: .topLeading)
+                    .padding(16)
+            } else {
+                HStack {
+                    Spacer()
+                    Button {
+                        beginMarkdownEditing(at: index)
+                    } label: {
+                        Image(systemName: "pencil")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(.white.opacity(0.6))
+                            .padding(6)
+                            .background(Color.white.opacity(0.1))
+                            .clipShape(Circle())
+                    }
                 }
-            }
-            .padding([.top, .trailing], 8)
+                .padding([.top, .trailing], 8)
 
-            Text(section.markdown)
-                .font(.body)
-                .foregroundStyle(.white.opacity(0.9))
-                .padding([.horizontal, .bottom], 16)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                Text(section.markdown)
+                    .font(.body)
+                    .foregroundStyle(.white.opacity(0.9))
+                    .padding([.horizontal, .bottom], 16)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
         }
         .background(Color.white.opacity(0.05))
         .clipShape(RoundedRectangle(cornerRadius: 12))
+        .id(markdownSectionAnchor(index))
     }
 
     private func mediaSectionView(_ section: MediaSection, index: Int) -> some View {
@@ -296,13 +301,57 @@ struct TripSegmentsView: View {
     private func addNewMarkdownSection() {
         let newSection = MarkdownSection(markdown: "")
         segment.sections.append(.markdown(newSection))
-        editingMarkdownIndex = segment.sections.count - 1
-        isShowingTextEditor = true
+        beginMarkdownEditing(at: segment.sections.count - 1)
+    }
+
+    private func markdownBinding(for index: Int) -> Binding<String> {
+        Binding(
+            get: {
+                guard segment.sections.indices.contains(index), case .markdown(let section) = segment.sections[index] else {
+                    return ""
+                }
+                return section.markdown
+            },
+            set: { newValue in
+                guard segment.sections.indices.contains(index), case .markdown(var section) = segment.sections[index] else {
+                    return
+                }
+                section.markdown = newValue
+                segment.sections[index] = .markdown(section)
+            }
+        )
+    }
+
+    private func beginMarkdownEditing(at index: Int) {
+        markdownTextBeforeEditing = markdownBinding(for: index).wrappedValue
+        editingMarkdownIndex = index
+    }
+
+    private func saveMarkdownAndFinishEditing() {
+        onSaved(segment)
+        isMarkdownEditorFocused = false
+        editingMarkdownIndex = nil
+        markdownTextBeforeEditing = nil
+    }
+
+    private func cancelMarkdownEditing() {
+        guard let index = editingMarkdownIndex, let originalText = markdownTextBeforeEditing else {
+            return
+        }
+        markdownBinding(for: index).wrappedValue = originalText
+        isMarkdownEditorFocused = false
+        editingMarkdownIndex = nil
+        markdownTextBeforeEditing = nil
+    }
+
+    private func markdownSectionAnchor(_ index: Int) -> String {
+        "markdown-section-\(index)"
     }
 
     private func addNewMediaSection() {
         let newSection = MediaSection(media: [])
         segment.sections.append(.media(newSection))
+        onSaved(segment)
     }
 
     private func handlePickedMedia(_ items: [PhotosPickerItem], for index: Int) {
@@ -354,13 +403,6 @@ struct TripSegmentsView: View {
         }
     }
 
-    private func saveAndDismiss() {
-        if isHeaderEditing {
-            segment.name = editName
-        }
-        onSaved(segment)
-        dismiss()
-    }
 }
 
 private struct MediaThumbnail: View {
