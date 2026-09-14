@@ -12,6 +12,7 @@
 		89ED15E62F381B35003422E4 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 89ED15E52F381B35003422E4 /* FirebaseStorage */; };
 		89FF8AD52F4F7410004936F0 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 89FF8AD42F4F7410004936F0 /* GoogleSignIn */; };
 		89FF8AD72F4F7411004936F0 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 89FF8AD62F4F7411004936F0 /* GoogleSignInSwift */; };
+		89AA00032F50000100ABCDEF /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 89AA00022F50000100ABCDEF /* MarkdownUI */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -44,6 +45,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				89AA00032F50000100ABCDEF /* MarkdownUI in Frameworks */,
 				89FF8AD72F4F7411004936F0 /* GoogleSignInSwift in Frameworks */,
 				89ED15E42F381B35003422E4 /* FirebaseCore in Frameworks */,
 				89FF8AD52F4F7410004936F0 /* GoogleSignIn in Frameworks */,
@@ -91,6 +93,7 @@
 			);
 			name = Trips;
 			packageProductDependencies = (
+				89AA00022F50000100ABCDEF /* MarkdownUI */,
 				89ED15E12F381B35003422E4 /* FirebaseAuth */,
 				89ED15E32F381B35003422E4 /* FirebaseCore */,
 				89ED15E52F381B35003422E4 /* FirebaseStorage */,
@@ -126,6 +129,7 @@
 			mainGroup = 89ED15C32F381502003422E4;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				89AA00012F50000100ABCDEF /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
 				89ED15E02F381B35003422E4 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				89FF8AD32F4F7410004936F0 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 			);
@@ -392,6 +396,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		89AA00012F50000100ABCDEF /* XCRemoteSwiftPackageReference "swift-markdown-ui" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/gonzalezreal/swift-markdown-ui.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.4.1;
+			};
+		};
 		89ED15E02F381B35003422E4 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
@@ -411,6 +423,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		89AA00022F50000100ABCDEF /* MarkdownUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 89AA00012F50000100ABCDEF /* XCRemoteSwiftPackageReference "swift-markdown-ui" */;
+			productName = MarkdownUI;
+		};
 		89ED15E12F381B35003422E4 /* FirebaseAuth */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 89ED15E02F381B35003422E4 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;

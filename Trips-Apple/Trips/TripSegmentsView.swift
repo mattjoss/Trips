@@ -9,6 +9,7 @@ import AVFoundation
 import AVKit
 import UIKit
 import UniformTypeIdentifiers
+import MarkdownUI
 
 struct TripSegmentsView: View {
     let tripDetailsId: String
@@ -24,7 +25,7 @@ struct TripSegmentsView: View {
     // MARK: - Section edit state
     @State private var editingMarkdownIndex: Int?
     @State private var markdownTextBeforeEditing: String?
-    @FocusState private var isMarkdownEditorFocused: Bool
+    @State private var markdownSelection = NSRange(location: 0, length: 0)
 
     // MARK: - Media Picker
     @State private var selectedPhotos: [PhotosPickerItem] = []
@@ -95,7 +96,6 @@ struct TripSegmentsView: View {
                     withAnimation {
                         proxy.scrollTo(markdownSectionAnchor(index), anchor: .top)
                     }
-                    isMarkdownEditorFocused = true
                 }
             }
         }
@@ -246,13 +246,16 @@ struct TripSegmentsView: View {
     private func markdownSectionView(_ section: MarkdownSection, index: Int) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             if editingMarkdownIndex == index {
-                TextEditor(text: markdownBinding(for: index))
-                    .font(.body)
-                    .foregroundStyle(.white)
-                    .scrollContentBackground(.hidden)
-                    .focused($isMarkdownEditorFocused)
+                VStack(spacing: 0) {
+                    markdownFormattingBar(for: index)
+
+                    MarkdownTextEditor(
+                        text: markdownBinding(for: index),
+                        selection: $markdownSelection
+                    )
                     .frame(minHeight: 180, alignment: .topLeading)
                     .padding(16)
+                }
             } else {
                 HStack {
                     Spacer()
@@ -269,9 +272,10 @@ struct TripSegmentsView: View {
                 }
                 .padding([.top, .trailing], 8)
 
-                Text(section.markdown)
-                    .font(.body)
-                    .foregroundStyle(.white.opacity(0.9))
+                Markdown(section.markdown)
+                    .markdownTextStyle {
+                        ForegroundColor(.white.opacity(0.9))
+                    }
                     .padding([.horizontal, .bottom], 16)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -279,6 +283,57 @@ struct TripSegmentsView: View {
         .background(Color.white.opacity(0.05))
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .id(markdownSectionAnchor(index))
+    }
+
+    private func markdownFormattingBar(for index: Int) -> some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 6) {
+                markdownFormatButton("Bold", systemImage: "bold", command: .bold, index: index)
+                markdownFormatButton("Italic", systemImage: "italic", command: .italic, index: index)
+
+                Menu {
+                    ForEach(1...3, id: \.self) { level in
+                        Button("Heading \(level)") {
+                            applyMarkdownCommand(.heading(level), at: index)
+                        }
+                    }
+                } label: {
+                    Image(systemName: "textformat.size")
+                        .frame(width: 32, height: 32)
+                }
+                .accessibilityLabel("Heading level")
+
+                markdownFormatButton("Bulleted List", systemImage: "list.bullet", command: .bulletedList, index: index)
+                markdownFormatButton("Numbered List", systemImage: "list.number", command: .numberedList, index: index)
+                markdownFormatButton("Quote", systemImage: "text.quote", command: .quote, index: index)
+                markdownFormatButton("Inline Code", systemImage: "chevron.left.forwardslash.chevron.right", command: .inlineCode, index: index)
+                markdownFormatButton("Link", systemImage: "link", command: .link, index: index)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+        }
+        .foregroundStyle(.white)
+        .background(Color.white.opacity(0.06))
+        .overlay(alignment: .bottom) {
+            Divider().overlay(Color.white.opacity(0.1))
+        }
+    }
+
+    private func markdownFormatButton(_ label: String, systemImage: String, command: MarkdownCommand, index: Int) -> some View {
+        Button {
+            applyMarkdownCommand(command, at: index)
+        } label: {
+            Image(systemName: systemImage)
+                .frame(width: 32, height: 32)
+        }
+        .accessibilityLabel(label)
+    }
+
+    private func applyMarkdownCommand(_ command: MarkdownCommand, at index: Int) {
+        let binding = markdownBinding(for: index)
+        let result = command.apply(to: binding.wrappedValue, selection: markdownSelection)
+        binding.wrappedValue = result.text
+        markdownSelection = result.selection
     }
 
     private func mediaSectionView(_ section: MediaSection, index: Int) -> some View {
@@ -389,12 +444,12 @@ struct TripSegmentsView: View {
 
     private func beginMarkdownEditing(at index: Int) {
         markdownTextBeforeEditing = markdownBinding(for: index).wrappedValue
+        markdownSelection = NSRange(location: (markdownBinding(for: index).wrappedValue as NSString).length, length: 0)
         editingMarkdownIndex = index
     }
 
     private func saveMarkdownAndFinishEditing() {
         onSaved(segment)
-        isMarkdownEditorFocused = false
         editingMarkdownIndex = nil
         markdownTextBeforeEditing = nil
     }
@@ -404,7 +459,6 @@ struct TripSegmentsView: View {
             return
         }
         markdownBinding(for: index).wrappedValue = originalText
-        isMarkdownEditorFocused = false
         editingMarkdownIndex = nil
         markdownTextBeforeEditing = nil
     }

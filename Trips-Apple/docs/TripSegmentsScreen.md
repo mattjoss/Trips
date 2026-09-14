@@ -13,7 +13,7 @@ The name of the segment will be displayed in the `Segment Header` area. Sinilar 
 Following the `Segment Header` area is a list of `Trip Segments`. 
 
 #### Markdown segments
-Markdown segments will be displayed fitting the width to the screen with a bit of padding and the height will be based on content. The segments are not editable, but there is a pencil icon in the top right corner of each segment that will toggle the segment into Edit mode. Edit mode replaces that segment's display with an inline text editor and scrolls it into view. While editing, Cancel replaces the back button and Done appears on the right; Done saves the segment and ends editing.
+Markdown segments will be displayed fitting the width to the screen with a bit of padding and the height will be based on rendered content. The segments are not editable, but there is a pencil icon in the top right corner of each segment that will toggle the segment into Edit mode. Edit mode replaces that segment's display with an inline text editor and scrolls it into view. A formatting bar provides bold, italic, heading levels 1–3, bulleted and numbered lists, quotes, inline code, and links without requiring the user to type Markdown syntax. While editing, Cancel replaces the back button and Done appears on the right; Done saves the segment and ends editing.
 
 #### Media segments
 Media segments will be displayed horizontally scrolling list of media items with a plus button at the end to add more media items. The plus button should bring up the standard media picker screen. The media item cells should be square and should be sized such that 3.5 cells should fit the width of the screen. The cells should be aspect fit to the image.
