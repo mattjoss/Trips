@@ -381,6 +381,13 @@ struct TripDetailsView: View {
                             .padding(.vertical, 14)
                             .background(Color.white.opacity(0.05))
                         }
+                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                            Button(role: .destructive) {
+                                deleteSegment(at: index)
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
 
                         if index < segments.count - 1 {
                             Divider()
@@ -626,6 +633,16 @@ struct TripDetailsView: View {
             details.segments.append(updatedSegment)
         }
         
+        tripDetails = details
+        saveFullDetails(details)
+    }
+
+    private func deleteSegment(at index: Int) {
+        guard var details = tripDetails, details.segments.indices.contains(index) else {
+            return
+        }
+
+        details.segments.remove(at: index)
         tripDetails = details
         saveFullDetails(details)
     }

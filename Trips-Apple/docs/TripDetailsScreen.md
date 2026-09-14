@@ -7,7 +7,7 @@ At the top of the screen is where the title, date and cover image are displayed.
 When not in edit mode, there should be a button with a pencil icon in the upper right corner of the display cell that will enter edit mode. When in edit mode, there should be a `Save` button in the top right corner of the screen that will save the `Header` info and exit edit mode.
 
 ## Trip Segments
-Below the title and date, there should be a list of trip segments. Each trip segment should just list the name of the trip segment. This is tied to the `Trip Segments` as specified in `Trips Schema.md`
+Below the title and date, there should be a list of trip segments. Each trip segment should just list the name of the trip segment. Swiping a segment left reveals a Delete button; tapping it removes and saves the segment. This is tied to the `Trip Segments` as specified in `Trips Schema.md`
 
 The trip details should be fetched from firebase storage with the path `data/trips/{trip_details}/trip.json` where `trip_details` is the trip details ID for the selected trip.
 
