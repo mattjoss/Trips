@@ -124,3 +124,6 @@ dist
 .vscode
 *.swp
 *.swo
+
+# Xcode per-user workspace state
+**/xcuserdata/**
