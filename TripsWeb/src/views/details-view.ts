@@ -1,5 +1,6 @@
 import { LitElement, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
+import { keyed } from 'lit/directives/keyed.js';
 import { TripDetails } from '../types';
 import { getTripDetailsUrl } from '../config';
 import '../components/trip-segment';
@@ -15,6 +16,7 @@ export class DetailsView extends LitElement {
   @state() private data: TripDetails | null = null;
   @state() private loading: boolean = true;
   @state() private error: boolean = false;
+  @state() private selectedSegment = 0;
 
   willUpdate(changedProperties: Map<string, any>) {
     if (changedProperties.has('tripId') && this.tripId) {
@@ -30,6 +32,7 @@ export class DetailsView extends LitElement {
   }
 
   async fetchDetails(id: string) {
+    this.selectedSegment = 0;
     this.loading = true;
     this.error = false;
     try {
@@ -43,6 +46,26 @@ export class DetailsView extends LitElement {
     } finally {
       this.loading = false;
     }
+  }
+
+  private selectSegment(index: number) {
+    this.selectedSegment = index;
+    this.querySelector<HTMLElement>(`#segment-tab-${index}`)?.scrollIntoView({
+      block: 'nearest', inline: 'nearest',
+    });
+  }
+
+  private handleTabKeydown(event: KeyboardEvent, index: number) {
+    const count = this.data?.segments.length ?? 0;
+    let nextIndex = index;
+    if (event.key === 'ArrowRight') nextIndex = (index + 1) % count;
+    else if (event.key === 'ArrowLeft') nextIndex = (index - 1 + count) % count;
+    else if (event.key === 'Home') nextIndex = 0;
+    else if (event.key === 'End') nextIndex = count - 1;
+    else return;
+    event.preventDefault();
+    this.selectSegment(nextIndex);
+    this.querySelector<HTMLElement>(`#segment-tab-${nextIndex}`)?.focus();
   }
 
   render() {
@@ -66,11 +89,26 @@ export class DetailsView extends LitElement {
           <p class="meta-date">${this.data.date}</p>
         </header>
 
-        <div class="segments-container">
-          ${this.data.segments.map(
-            (segment) => html`<trip-segment .segment=${segment}></trip-segment>`
-          )}
-        </div>
+        ${this.data.segments.length ? html`
+          <div class="segment-tabs" role="tablist" aria-label="Trip segments">
+            ${this.data.segments.map((segment, index) => html`
+              <button class="segment-tab" id="segment-tab-${index}"
+                role="tab" aria-selected=${this.selectedSegment === index}
+                aria-controls="segment-panel"
+                tabindex=${this.selectedSegment === index ? 0 : -1}
+                @click=${() => this.selectSegment(index)}
+                @keydown=${(event: KeyboardEvent) => this.handleTabKeydown(event, index)}
+              >${segment.name}</button>
+            `)}
+          </div>
+          <div class="segments-container" id="segment-panel" role="tabpanel"
+            aria-labelledby="segment-tab-${this.selectedSegment}" tabindex="0">
+            ${keyed(this.selectedSegment, html`
+              <trip-segment .segment=${this.data.segments[this.selectedSegment]}
+                .hideTitle=${true}></trip-segment>
+            `)}
+          </div>
+        ` : html`<p class="empty-state">No segments have been added to this trip yet.</p>`}
       </div>
     `;
   }

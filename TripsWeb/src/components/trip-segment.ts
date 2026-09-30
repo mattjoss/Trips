@@ -11,6 +11,7 @@ export class TripSegment extends LitElement {
   }
 
   @property({ type: Object }) segment?: ITripSegment;
+  @property({ type: Boolean }) hideTitle = false;
 
   private renderSection(section: Section) {
     if (section.type === 'markdown') {
@@ -35,10 +36,10 @@ export class TripSegment extends LitElement {
 
     return html`
       <section class="trip-segment">
-        <header class="segment-header">
-          <h2>${this.segment.name}</h2>
+        ${!this.hideTitle || this.segment.date ? html`<header class="segment-header">
+          ${!this.hideTitle ? html`<h2>${this.segment.name}</h2>` : ''}
           ${this.segment.date ? html`<span class="segment-date">${this.segment.date}</span>` : ''}
-        </header>
+        </header>` : ''}
         <div class="segment-content">
           ${this.segment.sections.map((section) => this.renderSection(section))}
         </div>
