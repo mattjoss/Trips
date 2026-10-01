@@ -4,6 +4,7 @@
 //
 
 import SwiftUI
+#if os(iOS)
 import UIKit
 
 struct MarkdownTextEditor: UIViewRepresentable {
@@ -55,6 +56,58 @@ struct MarkdownTextEditor: UIViewRepresentable {
         }
     }
 }
+
+#else
+import AppKit
+
+struct MarkdownTextEditor: NSViewRepresentable {
+    @Binding var text: String
+    @Binding var selection: NSRange
+
+    func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
+
+    func makeNSView(context: Context) -> NSScrollView {
+        let scrollView = NSTextView.scrollableTextView()
+        let textView = scrollView.documentView as! NSTextView
+        textView.delegate = context.coordinator
+        textView.backgroundColor = .clear
+        scrollView.drawsBackground = false
+        textView.drawsBackground = false
+        textView.textColor = .white
+        textView.insertionPointColor = .white
+        textView.font = .systemFont(ofSize: NSFont.systemFontSize)
+        textView.isRichText = false
+        textView.isAutomaticQuoteSubstitutionEnabled = false
+        textView.isAutomaticDashSubstitutionEnabled = false
+        textView.textContainerInset = NSSize(width: 4, height: 4)
+        textView.string = text
+        DispatchQueue.main.async { textView.window?.makeFirstResponder(textView) }
+        return scrollView
+    }
+
+    func updateNSView(_ scrollView: NSScrollView, context: Context) {
+        guard let textView = scrollView.documentView as? NSTextView else { return }
+        context.coordinator.parent = self
+        if textView.string != text { textView.string = text }
+        let range = selection.clamped(toUTF16Length: (text as NSString).length)
+        if textView.selectedRange() != range { textView.setSelectedRange(range) }
+    }
+
+    final class Coordinator: NSObject, NSTextViewDelegate {
+        var parent: MarkdownTextEditor
+        init(parent: MarkdownTextEditor) { self.parent = parent }
+        func textDidChange(_ notification: Notification) {
+            guard let view = notification.object as? NSTextView else { return }
+            parent.text = view.string
+            parent.selection = view.selectedRange()
+        }
+        func textViewDidChangeSelection(_ notification: Notification) {
+            guard let view = notification.object as? NSTextView else { return }
+            if parent.selection != view.selectedRange() { parent.selection = view.selectedRange() }
+        }
+    }
+}
+#endif
 
 enum MarkdownCommand {
     case bold

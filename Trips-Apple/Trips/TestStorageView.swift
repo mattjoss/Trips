@@ -1,10 +1,12 @@
 import SwiftUI
+#if os(iOS)
 import UIKit
+#endif
 
 struct TestStorageView: View {
     @StateObject private var storageManager = StorageManager()
     @State private var statusMessage: String = "Ready"
-    @State private var downloadedImage: UIImage?
+    @State private var downloadedImage: TripPlatformImage?
     
     var body: some View {
         VStack(spacing: 20) {
@@ -28,7 +30,7 @@ struct TestStorageView: View {
             .buttonStyle(.bordered)
             
             if let image = downloadedImage {
-                Image(uiImage: image)
+                Image(tripImage: image)
                     .resizable()
                     .scaledToFit()
                     .frame(height: 200)
@@ -46,7 +48,7 @@ struct TestStorageView: View {
         
         // Create a dummy image or text file
         // Let's create a simple text file for this test, or a small system image
-        guard let data = UIImage(named: "test")?.pngData() else {
+        guard let data = TripPlatformImage(named: "test")?.pngData() else {
             statusMessage = "Failed to create test data"
             return
         }
@@ -75,7 +77,7 @@ struct TestStorageView: View {
                 switch result {
                 case .success(let data):
                     statusMessage = "Download success! Size: \(data.count) bytes"
-                    if let image = UIImage(data: data) {
+                    if let image = TripPlatformImage(data: data) {
                         downloadedImage = image
                     }
                 case .failure(let error):

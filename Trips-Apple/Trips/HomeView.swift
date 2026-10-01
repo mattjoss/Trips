@@ -77,17 +77,17 @@ struct HomeView: View {
             }
         }
         .navigationTitle("Trips")
-        .navigationBarTitleDisplayMode(.large)
+        .tripsNavigationTitleStyle(.large)
         .toolbar {
             // Sign out
-            ToolbarItem(placement: .navigationBarLeading) {
+            ToolbarItem(placement: .cancellationAction) {
                 Button("Sign Out") {
                     try? authManager.signOut()
                 }
                 .foregroundStyle(.white.opacity(0.7))
             }
             // Add trip — uses NavigationLink via navigationDestination
-            ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItem(placement: .primaryAction) {
                 Button {
                     navigateToNewTrip = true
                 } label: {
@@ -97,7 +97,7 @@ struct HomeView: View {
                 .foregroundStyle(.white)
             }
         }
-        .toolbarColorScheme(.dark, for: .navigationBar)
+        .tripsDarkToolbar()
         .navigationDestination(isPresented: $navigateToNewTrip) {
             TripDetailsView(
                 existingTrip: nil,

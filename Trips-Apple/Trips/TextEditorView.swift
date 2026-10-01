@@ -35,16 +35,16 @@ struct TextEditorView: View {
                     .padding(16)
             }
             .navigationTitle("Editor")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarColorScheme(.dark, for: .navigationBar)
+            .tripsNavigationTitleStyle(.inline)
+            .tripsDarkToolbar()
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
                         onCancel()
                     }
                     .foregroundStyle(.white.opacity(0.7))
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .primaryAction) {
                     Button("Save") {
                         text = internalText
                         onSave()

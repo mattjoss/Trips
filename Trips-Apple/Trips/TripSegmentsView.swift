@@ -7,7 +7,9 @@ import SwiftUI
 import PhotosUI
 import AVFoundation
 import AVKit
+#if os(iOS)
 import UIKit
+#endif
 import UniformTypeIdentifiers
 import MarkdownUI
 
@@ -45,10 +47,10 @@ struct TripSegmentsView: View {
     var body: some View {
         screenContent
             .navigationTitle("")
-            .navigationBarTitleDisplayMode(.inline)
+            .tripsNavigationTitleStyle(.inline)
             .navigationBarBackButtonHidden(editingMarkdownIndex != nil)
-            .toolbar(mediaBrowserSelection == nil ? .visible : .hidden, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
+            .tripsToolbarHidden(mediaBrowserSelection != nil)
+            .tripsDarkToolbar()
             .toolbar { markdownEditorToolbar }
             .onChange(of: selectedPhotos) { _, items in
                 if let index = activeMediaSectionIndex {
@@ -141,11 +143,11 @@ struct TripSegmentsView: View {
     @ToolbarContentBuilder
     private var markdownEditorToolbar: some ToolbarContent {
         if editingMarkdownIndex != nil {
-            ToolbarItem(placement: .navigationBarLeading) {
+            ToolbarItem(placement: .cancellationAction) {
                 Button("Cancel", action: cancelMarkdownEditing)
                     .foregroundStyle(.white.opacity(0.7))
             }
-            ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItem(placement: .primaryAction) {
                 Button("Done", action: saveMarkdownAndFinishEditing)
                     .font(.system(size: 17, weight: .semibold))
                     .foregroundStyle(.white)
@@ -372,7 +374,7 @@ struct TripSegmentsView: View {
     }
 
     private var mediaTileSize: CGFloat {
-        (UIScreen.main.bounds.width - 32 - 36) / 3.5
+        tripMediaTileSize
     }
 
     private var mediaAddTile: some View {
@@ -569,7 +571,7 @@ private struct MediaDeletionRequest: Identifiable {
 private struct MediaThumbnail: View {
     let item: MediaItem
 
-    private let size = (UIScreen.main.bounds.width - 32 - 36) / 3.5
+    private let size = tripMediaTileSize
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
@@ -604,12 +606,12 @@ private struct MediaThumbnail: View {
 
 private struct VideoThumbnail: View {
     let url: URL?
-    @State private var thumbnail: UIImage?
+    @State private var thumbnail: TripPlatformImage?
 
     var body: some View {
         Group {
             if let thumbnail {
-                Image(uiImage: thumbnail)
+                Image(tripImage: thumbnail)
                     .resizable()
                     .scaledToFill()
             } else {
@@ -623,7 +625,7 @@ private struct VideoThumbnail: View {
             let asset = AVURLAsset(url: url)
             let generator = AVAssetImageGenerator(asset: asset)
             generator.appliesPreferredTrackTransform = true
-            thumbnail = try? UIImage(cgImage: generator.copyCGImage(at: .zero, actualTime: nil))
+            thumbnail = try? tripImage(from: generator.copyCGImage(at: .zero, actualTime: nil))
         }
     }
 }
@@ -653,6 +655,12 @@ private struct MediaBrowserView: View {
         ZStack {
             Color.black.ignoresSafeArea()
 
+            #if os(macOS)
+            if let item = currentItem {
+                browserPage(for: item)
+                    .padding(.vertical, 100)
+            }
+            #else
             TabView(selection: $selection) {
                 ForEach(media) { item in
                     browserPage(for: item)
@@ -661,6 +669,7 @@ private struct MediaBrowserView: View {
             }
             .tabViewStyle(.page(indexDisplayMode: .automatic))
             .ignoresSafeArea()
+            #endif
 
             VStack {
                 HStack {
@@ -681,6 +690,18 @@ private struct MediaBrowserView: View {
                         .accessibilityLabel("Back to trip segment")
 
                         Spacer()
+                        #if os(macOS)
+                        Button { moveSelection(by: -1) } label: {
+                            Image(systemName: "chevron.left")
+                        }
+                        .accessibilityLabel("Previous media")
+                        .disabled(selection == media.first?.id)
+                        Button { moveSelection(by: 1) } label: {
+                            Image(systemName: "chevron.right")
+                        }
+                        .accessibilityLabel("Next media")
+                        .disabled(selection == media.last?.id)
+                        #endif
                     }
                 }
                 .foregroundStyle(.white)
@@ -735,6 +756,12 @@ private struct MediaBrowserView: View {
         }
     }
 
+    private func moveSelection(by step: Int) {
+        guard let index = media.firstIndex(where: { $0.id == selection }),
+              media.indices.contains(index + step) else { return }
+        selection = media[index + step].id
+    }
+
     private func beginCaptionEditing() {
         guard let item = currentItem else { return }
         caption = item.caption
@@ -770,6 +797,7 @@ private struct MediaBrowserView: View {
     }
 }
 
+#if os(iOS)
 private struct GrowingCaptionTextView: UIViewRepresentable {
     @Binding var text: String
     @Binding var height: CGFloat
@@ -837,6 +865,25 @@ private struct GrowingCaptionTextView: UIViewRepresentable {
         }
     }
 }
+
+#else
+private struct GrowingCaptionTextView: View {
+    @Binding var text: String
+    @Binding var height: CGFloat
+    @Binding var isFocused: Bool
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        TextEditor(text: $text)
+            .scrollContentBackground(.hidden)
+            .padding(6)
+            .focused($focused)
+            .onAppear { height = 100; focused = isFocused }
+            .onChange(of: isFocused) { _, value in focused = value }
+            .onChange(of: focused) { _, value in isFocused = value }
+    }
+}
+#endif
 
 private struct ZoomableImage: View {
     let url: URL?

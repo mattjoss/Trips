@@ -19,7 +19,7 @@ struct TripDetailsView: View {
     @State private var editTitle: String
     @State private var editYear: String
     @State private var selectedPhoto: PhotosPickerItem?
-    @State private var editCoverImage: UIImage?
+    @State private var editCoverImage: TripPlatformImage?
     @State private var editImageURL: String   // keeps the existing URL if not changed
 
     // MARK: - Delete state
@@ -101,8 +101,8 @@ struct TripDetailsView: View {
             )
         }
         .navigationTitle(existingTrip == nil ? "New Trip" : "")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbarColorScheme(.dark, for: .navigationBar)
+        .tripsNavigationTitleStyle(.inline)
+        .tripsDarkToolbar()
         .toolbar { toolbarItems }
         .task {
             if let trip = existingTrip {
@@ -218,7 +218,7 @@ struct TripDetailsView: View {
             PhotosPicker(selection: $selectedPhoto, matching: .images) {
                 ZStack {
                     if let img = editCoverImage {
-                        Image(uiImage: img)
+                        Image(tripImage: img)
                             .resizable()
                             .scaledToFill()
                             .frame(maxWidth: .infinity)
@@ -260,7 +260,7 @@ struct TripDetailsView: View {
             .onChange(of: selectedPhoto) { _, item in
                 Task {
                     if let data = try? await item?.loadTransferable(type: Data.self),
-                       let img = UIImage(data: data) {
+                       let img = TripPlatformImage(data: data) {
                         editCoverImage = img
                     }
                 }
@@ -274,7 +274,7 @@ struct TripDetailsView: View {
                 }
                 fieldRow(label: "Year", placeholder: "") {
                     TextField("", text: $editYear)
-                        .keyboardType(.numberPad)
+                        .tripsYearKeyboard()
                 }
             }
 
@@ -441,7 +441,7 @@ struct TripDetailsView: View {
     @ToolbarContentBuilder
     private var toolbarItems: some ToolbarContent {
         if isEditing {
-            ToolbarItem(placement: .navigationBarLeading) {
+            ToolbarItem(placement: .cancellationAction) {
                 if existingTrip == nil {
                     Button("Cancel") { dismiss() }
                         .foregroundStyle(.white.opacity(0.7))
@@ -454,7 +454,7 @@ struct TripDetailsView: View {
                     .foregroundStyle(.white.opacity(0.7))
                 }
             }
-            ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItem(placement: .primaryAction) {
                 Button {
                     saveHeader()
                 } label: {

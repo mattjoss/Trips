@@ -12,7 +12,7 @@ function router() {
   const isAbout = !tripId && urlParams.get('page') === 'about';
   document.querySelector('.about-nav')?.toggleAttribute('aria-current', isAbout);
   if (isAbout) document.querySelector('.about-nav')?.setAttribute('aria-current', 'page');
-  document.title = isAbout ? 'About us | Travelog' : 'Travelog';
+  document.title = isAbout ? 'About us | Joss Journeys' : 'Joss Journeys';
 
   if (isAbout) {
     if (heroElement) heroElement.style.display = 'none';

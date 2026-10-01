@@ -1,4 +1,9 @@
 import SwiftUI
+#if os(macOS)
+import AppKit
+#else
+import UIKit
+#endif
 
 struct LoginView: View {
     @EnvironmentObject var authManager: AuthManager
@@ -63,18 +68,27 @@ struct LoginView: View {
     }
 
     private func signIn() {
+        #if os(macOS)
+        guard let presenter = NSApp.keyWindow ?? NSApp.mainWindow else {
+            errorMessage = "Unable to find the sign-in window."
+            return
+        }
+        #else
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let rootVC = windowScene.windows.first?.rootViewController else {
+              let rootVC = windowScene.windows.first(where: { $0.isKeyWindow })?.rootViewController else {
             errorMessage = "Unable to get presenting view controller."
             return
         }
+
+        let presenter = rootVC
+        #endif
 
         isLoading = true
         errorMessage = nil
 
         Task {
             do {
-                try await authManager.signInWithGoogle(presentingViewController: rootVC)
+                try await authManager.signInWithGoogle(presenting: presenter)
             } catch {
                 errorMessage = error.localizedDescription
             }

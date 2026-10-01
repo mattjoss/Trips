@@ -3,6 +3,13 @@ import FirebaseAuth
 import GoogleSignIn
 import FirebaseCore
 import Combine
+#if os(macOS)
+import AppKit
+typealias SignInPresenter = NSWindow
+#else
+import UIKit
+typealias SignInPresenter = UIViewController
+#endif
 
 @MainActor
 class AuthManager: ObservableObject {
@@ -28,7 +35,7 @@ class AuthManager: ObservableObject {
 
     // MARK: - Google Sign-In
 
-    func signInWithGoogle(presentingViewController: UIViewController) async throws {
+    func signInWithGoogle(presenting: SignInPresenter) async throws {
         guard let clientID = FirebaseApp.app()?.options.clientID else {
             throw AuthError.missingClientID
         }
@@ -36,7 +43,7 @@ class AuthManager: ObservableObject {
         let config = GIDConfiguration(clientID: clientID)
         GIDSignIn.sharedInstance.configuration = config
 
-        let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: presentingViewController)
+        let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: presenting)
 
         let user = result.user
         guard let idToken = user.idToken?.tokenString else {
