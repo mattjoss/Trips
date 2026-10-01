@@ -105,10 +105,45 @@ class StorageManager: ObservableObject {
         _ = try await ref.updateMetadata(metadata)
     }
 
-    /// Remove a trip from `data/trips.json` by its `trip_details` ID.
+    /// Delete all objects owned by the trip, then remove its list entry.
     func deleteTrip(tripDetailsId: String) async throws {
-        var allTrips = (try? await fetchTrips()) ?? []
+        let components = tripDetailsId.split(separator: "/", omittingEmptySubsequences: false)
+        guard !components.isEmpty,
+              components.allSatisfy({ !$0.isEmpty && $0 != "." && $0 != ".." }),
+              !tripDetailsId.contains("\\") else {
+            throw NSError(domain: "Trips", code: 1, userInfo: [
+                NSLocalizedDescriptionKey: "The trip storage path is invalid."
+            ])
+        }
+        // Never treat a failed list download as an empty list.
+        _ = try await fetchTrips()
+        let folder = storage.reference().child("data/trips/\(tripDetailsId)")
+        // Finish listing before deleting so pagination cannot skip objects.
+        let objects = try await tripObjects(in: folder)
+        for object in objects {
+            do {
+                try await object.delete()
+            } catch {
+                let storageError = error as NSError
+                guard storageError.domain == StorageErrorDomain,
+                      storageError.code == StorageErrorCode.objectNotFound.rawValue else {
+                    throw error
+                }
+            }
+        }
+        // Reload to preserve unrelated changes made while files were deleted.
+        var allTrips = try await fetchTrips()
         allTrips.removeAll(where: { $0.trip_details == tripDetailsId })
         try await saveTrips(allTrips)
     }
+
+    private func tripObjects(in folder: StorageReference) async throws -> [StorageReference] {
+        let contents = try await folder.listAll()
+        var objects = contents.items
+        for prefix in contents.prefixes {
+            objects.append(contentsOf: try await tripObjects(in: prefix))
+        }
+        return objects
+    }
+
 }

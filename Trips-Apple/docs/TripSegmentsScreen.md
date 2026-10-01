@@ -25,3 +25,11 @@ At the bottom of the screen there are two buttons side by side. On the left is `
 When a new markdown section is added or when a markdown section is edited, the app should show the same inline text editor in the section's position and scroll it into view.
 
 When a new media section is added, a new empty media section should be added to the list of sections and saved immediately. It will be empty except for the plus button.
+
+#### Deleting text and media items
+
+Long-press a text item or media thumbnail (right-click on Mac) to show its
+Delete action. A confirmation dialog appears before removing the item and
+saving the segment. Cancel leaves it unchanged. Deleting media also removes
+its caption from the segment; uploaded files are retained until the whole trip
+is deleted. Item deletion is unavailable during text editing or media upload.

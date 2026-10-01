@@ -114,6 +114,8 @@ a:hover {
 }
 
 .hero-content {
+  position: relative;
+  top: clamp(4rem, 13vh, 8rem);
   opacity: 0;
   animation: fadeUp 1s ease-out forwards;
 }

@@ -34,6 +34,8 @@ struct TripSegmentsView: View {
     @State private var activeMediaSectionIndex: Int?
     @State private var mediaBrowserSelection: MediaBrowserSelection?
     @State private var pendingMediaDeletion: MediaDeletionRequest?
+    @State private var pendingTextDeletionID: String?
+    @State private var showingTextDeletionConfirmation = false
 
     init(tripDetailsId: String, storageManager: StorageManager, segment: TripSegment, onSaved: @escaping (TripSegment) -> Void) {
         self.tripDetailsId = tripDetailsId
@@ -58,15 +60,22 @@ struct TripSegmentsView: View {
                 }
             }
             .onAppear { focusSegmentNameIfNeeded() }
-            .alert("Delete Media?", isPresented: isPresentingMediaDeletion) {
+            .alert("Delete Media?", isPresented: isPresentingMediaDeletion, presenting: pendingMediaDeletion) { deletion in
                 Button("Cancel", role: .cancel) { }
                 Button("Delete", role: .destructive) {
-                    if let deletion = pendingMediaDeletion {
-                        deleteMediaItem(deletion.itemID, from: deletion.sectionIndex)
-                    }
+                    deleteMediaItem(deletion.itemID, from: deletion.sectionIndex)
+                }
+            } message: { _ in
+                Text("Delete this photo or video and its caption from the trip segment? This cannot be undone.")
+            }
+            .alert("Delete Text?", isPresented: $showingTextDeletionConfirmation) {
+                Button("Cancel", role: .cancel) { pendingTextDeletionID = nil }
+                Button("Delete Text", role: .destructive) {
+                    if let id = pendingTextDeletionID { deleteTextSection(id) }
+                    pendingTextDeletionID = nil
                 }
             } message: {
-                Text("Remove this item from the trip segment?")
+                Text("Delete this text item from the trip segment? This cannot be undone.")
             }
     }
 
@@ -233,7 +242,7 @@ struct TripSegmentsView: View {
 
     private var sectionsList: some View {
         VStack(spacing: 24) {
-            ForEach(Array(segment.sections.enumerated()), id: \.offset) { index, section in
+            ForEach(Array(segment.sections.enumerated()), id: \.element.id) { index, section in
                 switch section {
                 case .markdown(let markdownSection):
                     markdownSectionView(markdownSection, index: index)
@@ -285,6 +294,15 @@ struct TripSegmentsView: View {
         .background(Color.white.opacity(0.05))
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .id(markdownSectionAnchor(index))
+        .contextMenu {
+            Button(role: .destructive) {
+                pendingTextDeletionID = section.id
+                showingTextDeletionConfirmation = true
+            } label: {
+                Label("Delete Text", systemImage: "trash")
+            }
+            .disabled(editingMarkdownIndex != nil || !selectedPhotos.isEmpty)
+        }
     }
 
     private func markdownFormattingBar(for index: Int) -> some View {
@@ -366,6 +384,7 @@ struct TripSegmentsView: View {
                         } label: {
                             Label("Delete", systemImage: "trash")
                         }
+                        .disabled(editingMarkdownIndex != nil || !selectedPhotos.isEmpty)
                     }
                 }
             }
@@ -549,6 +568,18 @@ struct TripSegmentsView: View {
 
         section.media.removeAll { $0.id == itemID }
         segment.sections[sectionIndex] = .media(section)
+        onSaved(segment)
+    }
+
+    private func deleteTextSection(_ sectionID: String) {
+        guard editingMarkdownIndex == nil, selectedPhotos.isEmpty,
+              let index = segment.sections.firstIndex(where: { $0.id == sectionID }),
+              case .markdown = segment.sections[index] else { return }
+        segment.sections.remove(at: index)
+        // Keep the media picker pointing at its original section after removal.
+        if let activeIndex = activeMediaSectionIndex, activeIndex > index {
+            activeMediaSectionIndex = activeIndex - 1
+        }
         onSaved(segment)
     }
 

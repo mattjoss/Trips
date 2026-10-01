@@ -26,6 +26,10 @@ struct TripDetailsView: View {
     @State private var showingDeleteConfirmation = false
     @State private var isDeleting = false
     @State private var deleteError: String?
+    @State private var segmentToDeleteIndex: Int?
+    @State private var showingSegmentDeleteConfirmation = false
+    @State private var isDeletingSegment = false
+    @State private var segmentDeleteError: String?
 
     // MARK: - Trip details (segments)
     @State private var tripDetails: TripDetails?
@@ -94,11 +98,17 @@ struct TripDetailsView: View {
                 }
             }
 
-            NavigationLink(
-                destination: segmentDestination,
-                isActive: $isNavigatingToSegment,
-                label: { EmptyView() }
-            )
+        }
+        .disabled(isDeletingSegment)
+        .overlay {
+            if isDeletingSegment {
+                ProgressView("Deleting segment…")
+                    .padding(24)
+                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+            }
+        }
+        .navigationDestination(isPresented: $isNavigatingToSegment) {
+            segmentDestination
         }
         .navigationTitle(existingTrip == nil ? "New Trip" : "")
         .tripsNavigationTitleStyle(.inline)
@@ -118,7 +128,23 @@ struct TripDetailsView: View {
                 deleteTrip()
             }
         } message: {
-            Text("Are you sure you want to delete '\(editTitle)'? This action cannot be undone.")
+            Text("Delete '\(editTitle)' and all its segments, photos, and videos? This cannot be undone.")
+        }
+        .alert("Delete Segment?", isPresented: $showingSegmentDeleteConfirmation) {
+            Button("Cancel", role: .cancel) { segmentToDeleteIndex = nil }
+            Button("Delete Segment", role: .destructive) {
+                if let index = segmentToDeleteIndex { deleteSegment(at: index) }
+            }
+        } message: {
+            Text("Delete '\(segmentDeletionName)' and all its text and media items? This cannot be undone.")
+        }
+        .alert("Unable to Delete Segment", isPresented: Binding(
+            get: { segmentDeleteError != nil },
+            set: { if !$0 { segmentDeleteError = nil } }
+        )) {
+            Button("OK", role: .cancel) { segmentDeleteError = nil }
+        } message: {
+            Text(segmentDeleteError ?? "")
         }
     }
 
@@ -381,9 +407,18 @@ struct TripDetailsView: View {
                             .padding(.vertical, 14)
                             .background(Color.white.opacity(0.05))
                         }
+                        .contextMenu {
+                            Button(role: .destructive) {
+                                segmentToDeleteIndex = index
+                                showingSegmentDeleteConfirmation = true
+                            } label: {
+                                Label("Delete Segment", systemImage: "trash")
+                            }
+                        }
                         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                             Button(role: .destructive) {
-                                deleteSegment(at: index)
+                                segmentToDeleteIndex = index
+                                showingSegmentDeleteConfirmation = true
                             } label: {
                                 Label("Delete", systemImage: "trash")
                             }
@@ -637,14 +672,34 @@ struct TripDetailsView: View {
         saveFullDetails(details)
     }
 
+    private var segmentDeletionName: String {
+        guard let index = segmentToDeleteIndex, let details = tripDetails,
+              details.segments.indices.contains(index) else { return "this segment" }
+        let name = details.segments[index].name.trimmingCharacters(in: .whitespacesAndNewlines)
+        return name.isEmpty ? "Untitled Segment" : name
+    }
+
     private func deleteSegment(at index: Int) {
-        guard var details = tripDetails, details.segments.indices.contains(index) else {
+        guard !isDeletingSegment, var details = tripDetails, details.segments.indices.contains(index) else {
             return
         }
 
         details.segments.remove(at: index)
-        tripDetails = details
-        saveFullDetails(details)
+        isDeletingSegment = true
+        Task {
+            defer {
+                isDeletingSegment = false
+                segmentToDeleteIndex = nil
+            }
+            do {
+                try await storageManager.saveTripDetails(details, tripDetailsId: details.id)
+                tripDetails = details
+                selectedSegment = nil
+                selectedSegmentIndex = nil
+            } catch {
+                segmentDeleteError = error.localizedDescription
+            }
+        }
     }
 
     private func saveFullDetails(_ details: TripDetails) {

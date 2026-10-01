@@ -10,3 +10,17 @@ There should be a `+` button in the top right corner of the screen that will tak
 
 See `CreateTripScreen.md` for more details of the `Create Trip` screen
 
+
+### Delete a trip
+
+Long-press a trip card to show **Delete Trip** (right-click on Mac). Selecting
+it opens a confirmation naming the trip and explaining that its segments,
+photos, and videos will also be deleted. Cancel makes no changes. Confirming
+shows a progress indicator and prevents repeated actions. The card disappears
+only after deletion succeeds; failures show an alert so the user can retry.
+
+Deletion removes all objects under `data/trips/{trip_details}/`, including
+`trip.json`, `cover.jpg`, and the `media/` folder, then removes the trip from
+`data/trips.json`. Images linked from elsewhere are not owned by this trip
+and are not deleted. The existing Delete Trip action in trip details uses the
+same behavior. Storage rules must permit listing and deleting trip objects.

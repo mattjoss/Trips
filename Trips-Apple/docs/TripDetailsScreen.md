@@ -31,3 +31,13 @@ Save the edited trip data to `data/trips.json` in firebase storage
 
 ### Trip Segments Update
 When the trip segments have been edited, added or removed, the trip segments should be saved to `data/trips/{trip_details}/trip.json` in firebase storage
+
+### Delete a trip segment
+
+Long-press a segment row (right-click on Mac) and choose **Delete Segment**.
+The existing swipe Delete action also opens the confirmation dialog. The
+confirmation names the segment and explains that all its text and media items
+will be removed. Cancel leaves the segment unchanged. Confirming saves the
+updated trip details before removing the row; failures show an alert and leave
+the segment visible for retry. Uploaded media files are retained until the
+whole trip is deleted.

@@ -7,25 +7,25 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		89ED15E22F381B35003422E4 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 89ED15E12F381B35003422E4 /* FirebaseAuth */; };
-		ABCD0000000000000000000A /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = ABCD00000000000000000011 /* FirebaseAuth */; };
-		89ED15E42F381B35003422E4 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 89ED15E32F381B35003422E4 /* FirebaseCore */; };
-		ABCD0000000000000000000B /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = ABCD00000000000000000012 /* FirebaseCore */; };
-		89ED15E62F381B35003422E4 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 89ED15E52F381B35003422E4 /* FirebaseStorage */; };
-		ABCD0000000000000000000C /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = ABCD00000000000000000013 /* FirebaseStorage */; };
-		89FF8AD52F4F7410004936F0 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 89FF8AD42F4F7410004936F0 /* GoogleSignIn */; };
-		ABCD0000000000000000000D /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = ABCD00000000000000000014 /* GoogleSignIn */; };
-		89FF8AD72F4F7411004936F0 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 89FF8AD62F4F7411004936F0 /* GoogleSignInSwift */; };
-		ABCD0000000000000000000E /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = ABCD00000000000000000015 /* GoogleSignInSwift */; };
 		89AA00032F50000100ABCDEF /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 89AA00022F50000100ABCDEF /* MarkdownUI */; };
+		89ED15E22F381B35003422E4 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 89ED15E12F381B35003422E4 /* FirebaseAuth */; };
+		89ED15E42F381B35003422E4 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 89ED15E32F381B35003422E4 /* FirebaseCore */; };
+		89ED15E62F381B35003422E4 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 89ED15E52F381B35003422E4 /* FirebaseStorage */; };
+		89FF8AD52F4F7410004936F0 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 89FF8AD42F4F7410004936F0 /* GoogleSignIn */; };
+		89FF8AD72F4F7411004936F0 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 89FF8AD62F4F7411004936F0 /* GoogleSignInSwift */; };
+		ABCD0000000000000000000A /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = ABCD00000000000000000011 /* FirebaseAuth */; };
+		ABCD0000000000000000000B /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = ABCD00000000000000000012 /* FirebaseCore */; };
+		ABCD0000000000000000000C /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = ABCD00000000000000000013 /* FirebaseStorage */; };
+		ABCD0000000000000000000D /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = ABCD00000000000000000014 /* GoogleSignIn */; };
+		ABCD0000000000000000000E /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = ABCD00000000000000000015 /* GoogleSignInSwift */; };
 		ABCD0000000000000000000F /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = ABCD00000000000000000010 /* MarkdownUI */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		89ED15CC2F381502003422E4 /* Trips.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Trips.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		ABCD00000000000000000002 /* TripsMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TripsMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		ABCD00000000000000000020 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		ABCD00000000000000000021 /* TripsMac.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TripsMac.entitlements; sourceTree = "<group>"; };
-		89ED15CC2F381502003422E4 /* Trips.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Trips.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		ABCD00000000000000000002 /* Trips.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TripsMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -41,7 +41,7 @@
 			membershipExceptions = (
 				Info.plist,
 			);
-			target = ABCD00000000000000000001 /* Trips */;
+			target = ABCD00000000000000000001 /* TripsMac */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -50,7 +50,7 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				89FF8ADF2F4F76BE004936F0 /* Exceptions for "Trips" folder in "Trips" target */,
-				ABCD00000000000000000009 /* Mac source exceptions */,
+				ABCD00000000000000000009 /* Exceptions for "Trips" folder in "TripsMac" target */,
 			);
 			path = Trips;
 			sourceTree = "<group>";
@@ -87,15 +87,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		ABCD00000000000000000022 /* TripsMac */ = {
-			isa = PBXGroup;
-			children = (
-				ABCD00000000000000000020 /* Info.plist */,
-				ABCD00000000000000000021 /* TripsMac.entitlements */,
-			);
-			path = TripsMac;
-			sourceTree = "<group>";
-		};
 		89ED15C32F381502003422E4 = {
 			isa = PBXGroup;
 			children = (
@@ -112,6 +103,15 @@
 				ABCD00000000000000000002 /* TripsMac.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		ABCD00000000000000000022 /* TripsMac */ = {
+			isa = PBXGroup;
+			children = (
+				ABCD00000000000000000020 /* Info.plist */,
+				ABCD00000000000000000021 /* TripsMac.entitlements */,
+			);
+			path = TripsMac;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -145,7 +145,7 @@
 			productReference = 89ED15CC2F381502003422E4 /* Trips.app */;
 			productType = "com.apple.product-type.application";
 		};
-		ABCD00000000000000000001 /* Trips */ = {
+		ABCD00000000000000000001 /* TripsMac */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = ABCD00000000000000000006 /* Build configuration list for PBXNativeTarget "TripsMac" */;
 			buildPhases = (
@@ -170,7 +170,7 @@
 				ABCD00000000000000000015 /* GoogleSignInSwift */,
 			);
 			productName = TripsMac;
-			productReference = ABCD00000000000000000002 /* Trips.app */;
+			productReference = ABCD00000000000000000002 /* TripsMac.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -410,40 +410,6 @@
 			};
 			name = Debug;
 		};
-		ABCD00000000000000000007 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 4Q2DXM2W94;
-				ENABLE_APP_SANDBOX = YES;
-				CODE_SIGN_ENTITLEMENTS = TripsMac/TripsMac.entitlements;
-				ENABLE_HARDENED_RUNTIME = YES;
-				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = TripsMac/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
-				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 15.7;
-				MARKETING_VERSION = 1.0;
-				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_BUNDLE_IDENTIFIER = com.jossfamily.Trips;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				REGISTER_APP_GROUPS = YES;
-				SDKROOT = macosx;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = macosx;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-			};
-			name = Debug;
-		};
 		89ED15D92F381504003422E4 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -490,16 +456,50 @@
 			};
 			name = Release;
 		};
+		ABCD00000000000000000007 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = TripsMac/TripsMac.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4Q2DXM2W94;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TripsMac/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 15.7;
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_BUNDLE_IDENTIFIER = com.jossfamily.Trips;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
 		ABCD00000000000000000008 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = TripsMac/TripsMac.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 4Q2DXM2W94;
 				ENABLE_APP_SANDBOX = YES;
-				CODE_SIGN_ENTITLEMENTS = TripsMac/TripsMac.entitlements;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
@@ -589,17 +589,7 @@
 			package = 89AA00012F50000100ABCDEF /* XCRemoteSwiftPackageReference "swift-markdown-ui" */;
 			productName = MarkdownUI;
 		};
-		ABCD00000000000000000010 /* MarkdownUI */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 89AA00012F50000100ABCDEF /* XCRemoteSwiftPackageReference "swift-markdown-ui" */;
-			productName = MarkdownUI;
-		};
 		89ED15E12F381B35003422E4 /* FirebaseAuth */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 89ED15E02F381B35003422E4 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseAuth;
-		};
-		ABCD00000000000000000011 /* FirebaseAuth */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 89ED15E02F381B35003422E4 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseAuth;
@@ -609,17 +599,7 @@
 			package = 89ED15E02F381B35003422E4 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseCore;
 		};
-		ABCD00000000000000000012 /* FirebaseCore */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 89ED15E02F381B35003422E4 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseCore;
-		};
 		89ED15E52F381B35003422E4 /* FirebaseStorage */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 89ED15E02F381B35003422E4 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseStorage;
-		};
-		ABCD00000000000000000013 /* FirebaseStorage */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 89ED15E02F381B35003422E4 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseStorage;
@@ -629,15 +609,35 @@
 			package = 89FF8AD32F4F7410004936F0 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
 			productName = GoogleSignIn;
 		};
-		ABCD00000000000000000014 /* GoogleSignIn */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 89FF8AD32F4F7410004936F0 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
-			productName = GoogleSignIn;
-		};
 		89FF8AD62F4F7411004936F0 /* GoogleSignInSwift */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 89FF8AD32F4F7410004936F0 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
 			productName = GoogleSignInSwift;
+		};
+		ABCD00000000000000000010 /* MarkdownUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 89AA00012F50000100ABCDEF /* XCRemoteSwiftPackageReference "swift-markdown-ui" */;
+			productName = MarkdownUI;
+		};
+		ABCD00000000000000000011 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 89ED15E02F381B35003422E4 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		ABCD00000000000000000012 /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 89ED15E02F381B35003422E4 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		ABCD00000000000000000013 /* FirebaseStorage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 89ED15E02F381B35003422E4 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseStorage;
+		};
+		ABCD00000000000000000014 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 89FF8AD32F4F7410004936F0 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
 		};
 		ABCD00000000000000000015 /* GoogleSignInSwift */ = {
 			isa = XCSwiftPackageProductDependency;
