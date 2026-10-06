@@ -1,7 +1,43 @@
-# Trips
-Website for our trips
+# Trips Web
 
-Hoe to run it:
+Website for displaying our trips (`travel.jossfamily.com`).
+
+## How to Run Locally
+
 ```bash
 npm run dev
 ```
+
+## How to Deploy to Firebase Hosting
+
+To build the application and deploy it directly to Firebase Hosting:
+
+```bash
+npm run deploy
+```
+
+Alternatively, run:
+
+```bash
+npm run build
+npx -y firebase-tools@latest deploy --only hosting
+```
+
+## First-Time Setup / Re-initialization
+
+If `firebase.json` is missing or you are setting up on a new machine:
+
+1. **Log in to Firebase CLI:**
+   ```bash
+   npx -y firebase-tools@latest login
+   ```
+
+2. **Initialize Firebase Hosting:**
+   ```bash
+   npx -y firebase-tools@latest init hosting
+   ```
+   - **Project selection:** Select `joss-travel-ios`
+   - **Public directory:** `dist`
+   - **Configure as single-page app (SPA)?** `y`
+   - **Set up automatic builds and deploys with GitHub?** `n`
+   - **Overwrite dist/index.html?** `n`
