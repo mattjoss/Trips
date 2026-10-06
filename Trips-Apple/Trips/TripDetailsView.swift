@@ -656,19 +656,24 @@ struct TripDetailsView: View {
                 timestamp: Date().timeIntervalSince1970
             )
             tripDetails = newDetails
+            selectedSegmentIndex = 0
+            selectedSegment = updatedSegment
             saveFullDetails(newDetails)
             return
         }
 
-        if let idx = selectedSegmentIndex, idx < details.segments.count {
+        if let idx = selectedSegmentIndex, details.segments.indices.contains(idx) {
             details.segments[idx] = updatedSegment
         } else if let selectedSegment, let idx = details.segments.firstIndex(where: { $0.id == selectedSegment.id && !$0.id.isEmpty }) {
             details.segments[idx] = updatedSegment
+            selectedSegmentIndex = idx
         } else {
             details.segments.append(updatedSegment)
+            selectedSegmentIndex = details.segments.count - 1
         }
         
         tripDetails = details
+        selectedSegment = updatedSegment
         saveFullDetails(details)
     }
 
