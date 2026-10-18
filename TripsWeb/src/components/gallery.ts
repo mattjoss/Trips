@@ -48,7 +48,7 @@ export class TripGallery extends LitElement {
                   <div class="gallery-media-container">
                     ${item.type === 'image'
                       ? html`<img
-                          src="${item.url}"
+                          src="${item.thumbnail_url || item.thumbnailUrl || item.url}"
                           alt="${item.caption || ''}"
                           class="gallery-media"
                           loading="lazy"

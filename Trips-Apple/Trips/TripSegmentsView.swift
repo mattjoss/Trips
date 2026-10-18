@@ -503,22 +503,52 @@ struct TripSegmentsView: View {
                     let timestamp = Int(Date().timeIntervalSince1970 * 1000)
                     let contentType = item.supportedContentTypes.first
                     let isVideo = contentType?.conforms(to: .movie) == true
-                    let fileExtension = contentType?.preferredFilenameExtension ?? (isVideo ? "mov" : "jpg")
-                    let mediaType = isVideo ? "video" : "image"
-                    let filename = "media_\(timestamp)_\(UUID().uuidString.prefix(4)).\(fileExtension)"
-                    let path = "data/trips/\(tripDetailsId)/media/\(filename)"
+                    let uuidPrefix = UUID().uuidString.prefix(4)
 
                     do {
-                        let url = try await uploadMediaData(
-                            data,
-                            path: path,
-                            contentType: contentType?.preferredMIMEType
-                        )
+                        let mediaItem: MediaItem
+                        if isVideo {
+                            let fileExtension = contentType?.preferredFilenameExtension ?? "mov"
+                            let filename = "media_\(timestamp)_\(uuidPrefix).\(fileExtension)"
+                            let path = "data/trips/\(tripDetailsId)/media/\(filename)"
+                            let url = try await uploadMediaData(
+                                data,
+                                path: path,
+                                contentType: contentType?.preferredMIMEType
+                            )
+                            mediaItem = MediaItem(url: url.absoluteString, caption: "", type: "video")
+                        } else {
+                            guard let largeData = resizeImageData(data, maxDimension: 2048) ?? TripPlatformImage(data: data)?.jpegData(compressionQuality: 0.85),
+                                  let smallData = resizeImageData(data, maxDimension: 640) ?? TripPlatformImage(data: data)?.jpegData(compressionQuality: 0.85) else {
+                                throw NSError(domain: "Trips", code: 2, userInfo: [NSLocalizedDescriptionKey: "Failed to convert image to JPEG"])
+                            }
+                            let largePath = "data/trips/\(tripDetailsId)/media/media_\(timestamp)_\(uuidPrefix).jpg"
+                            let smallPath = "data/trips/\(tripDetailsId)/media/media_\(timestamp)_\(uuidPrefix)_640.jpg"
+
+                            async let largeUpload = uploadMediaData(
+                                largeData,
+                                path: largePath,
+                                contentType: "image/jpeg"
+                            )
+                            async let smallUpload = uploadMediaData(
+                                smallData,
+                                path: smallPath,
+                                contentType: "image/jpeg"
+                            )
+                            let (largeURL, smallURL) = try await (largeUpload, smallUpload)
+                            mediaItem = MediaItem(
+                                url: largeURL.absoluteString,
+                                caption: "",
+                                type: "image",
+                                thumbnailUrl: smallURL.absoluteString
+                            )
+                        }
+
                         await MainActor.run {
                             guard segment.sections.indices.contains(index), case .media(var section) = segment.sections[index] else {
                                 return
                             }
-                            section.media.append(MediaItem(url: url.absoluteString, caption: "", type: mediaType))
+                            section.media.append(mediaItem)
                             segment.sections[index] = .media(section)
                         }
                     } catch {
@@ -609,7 +639,7 @@ private struct MediaThumbnail: View {
             if item.type == "video" {
                 VideoThumbnail(url: URL(string: item.url))
             } else {
-                AsyncImage(url: URL(string: item.url)) { phase in
+                AsyncImage(url: URL(string: item.thumbnailUrl ?? item.url)) { phase in
                     if let image = phase.image {
                         image
                             .resizable()
@@ -783,7 +813,7 @@ private struct MediaBrowserView: View {
             VideoPlayer(player: AVPlayer(url: url))
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
-            ZoomableImage(url: URL(string: item.url))
+            ZoomableImage(url: URL(string: item.thumbnailUrl ?? item.url))
         }
     }
 

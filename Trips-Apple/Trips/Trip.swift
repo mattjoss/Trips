@@ -139,14 +139,40 @@ struct MediaItem: Codable, Identifiable {
     var url: String
     var caption: String
     var type: String // "image" or "video"
+    var thumbnailUrl: String?
 
-    init(url: String, caption: String, type: String) {
+    init(url: String, caption: String, type: String, thumbnailUrl: String? = nil) {
         self.url = url
         self.caption = caption
         self.type = type
+        self.thumbnailUrl = thumbnailUrl
     }
 
     enum CodingKeys: String, CodingKey {
         case url, caption, type
+        case thumbnailUrl = "thumbnail_url"
+        case altThumbnailUrl = "thumbnailUrl"
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.url = try container.decode(String.self, forKey: .url)
+        self.caption = (try? container.decode(String.self, forKey: .caption)) ?? ""
+        self.type = (try? container.decode(String.self, forKey: .type)) ?? "image"
+        if let thumb = try? container.decodeIfPresent(String.self, forKey: .thumbnailUrl) {
+            self.thumbnailUrl = thumb
+        } else if let altThumb = try? container.decodeIfPresent(String.self, forKey: .altThumbnailUrl) {
+            self.thumbnailUrl = altThumb
+        } else {
+            self.thumbnailUrl = nil
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(url, forKey: .url)
+        try container.encode(caption, forKey: .caption)
+        try container.encode(type, forKey: .type)
+        try container.encodeIfPresent(thumbnailUrl, forKey: .thumbnailUrl)
     }
 }

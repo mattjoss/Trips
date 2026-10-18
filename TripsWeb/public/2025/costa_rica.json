@@ -18,32 +18,38 @@
                     "media": [
                         {
                             "type": "image",
-                            "url": "https://picsum.photos/id/1015/800/600",
+                            "url": "https://picsum.photos/id/1015/2048/1536",
+                            "thumbnail_url": "https://picsum.photos/id/1015/640/480",
                             "caption": "A beautiful sunset over the rainforest"
                         },
                         {
                             "type": "image",
-                            "url": "https://picsum.photos/id/1016/800/600",
+                            "url": "https://picsum.photos/id/1016/2048/1536",
+                            "thumbnail_url": "https://picsum.photos/id/1016/640/480",
                             "caption": "A clever sunset over the rainforest"
                         },
                         {
                             "type": "image",
-                            "url": "https://picsum.photos/id/1017/800/600",
+                            "url": "https://picsum.photos/id/1017/2048/1536",
+                            "thumbnail_url": "https://picsum.photos/id/1017/640/480",
                             "caption": "A handsome sunset over the rainforest"
                         },
                         {
                             "type": "image",
-                            "url": "https://picsum.photos/id/1018/800/600",
+                            "url": "https://picsum.photos/id/1018/2048/1536",
+                            "thumbnail_url": "https://picsum.photos/id/1018/640/480",
                             "caption": "A fancy sunset over the rainforest"
                         },
                         {
                             "type": "image",
-                            "url": "https://picsum.photos/id/1019/800/600",
+                            "url": "https://picsum.photos/id/1019/2048/1536",
+                            "thumbnail_url": "https://picsum.photos/id/1019/640/480",
                             "caption": "A beautiful sunset over the rainforest"
                         },
                         {
                             "type": "image",
-                            "url": "https://picsum.photos/id/1020/800/600",
+                            "url": "https://picsum.photos/id/1020/2048/1536",
+                            "thumbnail_url": "https://picsum.photos/id/1020/640/480",
                             "caption": "A beautiful sunset over the rainforest"
                         }
                     ]

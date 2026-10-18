@@ -596,7 +596,8 @@ struct TripDetailsView: View {
                 var imageURL = editImageURL
                 if let img = editCoverImage,
                    let jpegData = img.jpegData(compressionQuality: 0.85) {
-                    imageURL = try await storageManager.uploadCoverImage(jpegData, tripDetails: tripDetailsId)
+                    let resizedData = resizeImageData(jpegData, maxDimension: 2048) ?? jpegData
+                    imageURL = try await storageManager.uploadCoverImage(resizedData, tripDetails: tripDetailsId)
                 }
 
                 // Build the updated/new Trip

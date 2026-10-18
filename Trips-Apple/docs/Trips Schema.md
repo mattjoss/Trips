@@ -37,6 +37,7 @@ Object with:
 
 ### Media Item
 Object with:
-- `url`: String - URL to the media item
+- `url`: String - URL to the media item (max dimension 2048 for uploaded images)
+- `thumbnail_url`: Optional String - URL to smaller preview version (max dimension 640)
 - `caption`: String - Caption for the media item
 - `type`: String - Type of media item (image or video)

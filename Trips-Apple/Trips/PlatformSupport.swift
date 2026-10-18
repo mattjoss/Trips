@@ -1,4 +1,7 @@
 import SwiftUI
+import CoreGraphics
+import ImageIO
+import UniformTypeIdentifiers
 #if os(macOS)
 import AppKit
 
@@ -84,4 +87,47 @@ extension View {
         self.keyboardType(.numberPad)
         #endif
     }
+}
+
+// MARK: - Image Resizing
+
+/// Resize an image encoded in `Data` so its maximum dimension is at most `maxDimension`.
+/// Respects EXIF orientation, preserves aspect ratio, and does not upscale smaller images.
+func resizeImageData(_ data: Data, maxDimension: CGFloat, compressionQuality: CGFloat = 0.85) -> Data? {
+    guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
+
+    let propertiesOptions = [kCGImageSourceShouldCache: false] as CFDictionary
+    guard let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, propertiesOptions) as? [CFString: Any] else {
+        return nil
+    }
+
+    let width = (properties[kCGImagePropertyPixelWidth] as? CGFloat) ?? 0
+    let height = (properties[kCGImagePropertyPixelHeight] as? CGFloat) ?? 0
+    let originalMax = max(width, height)
+
+    let targetMax = originalMax > 0 && originalMax < maxDimension ? originalMax : maxDimension
+
+    let downsampleOptions: [CFString: Any] = [
+        kCGImageSourceCreateThumbnailFromImageAlways: true,
+        kCGImageSourceShouldCacheImmediately: true,
+        kCGImageSourceCreateThumbnailWithTransform: true,
+        kCGImageSourceThumbnailMaxPixelSize: targetMax
+    ]
+
+    guard let downsampledImage = CGImageSourceCreateThumbnailAtIndex(source, 0, downsampleOptions as CFDictionary) else {
+        return nil
+    }
+
+    let mutableData = NSMutableData()
+    guard let destination = CGImageDestinationCreateWithData(mutableData, UTType.jpeg.identifier as CFString, 1, nil) else {
+        return nil
+    }
+
+    let destinationOptions: [CFString: Any] = [
+        kCGImageDestinationLossyCompressionQuality: compressionQuality
+    ]
+    CGImageDestinationAddImage(destination, downsampledImage, destinationOptions as CFDictionary)
+    guard CGImageDestinationFinalize(destination) else { return nil }
+
+    return mutableData as Data
 }

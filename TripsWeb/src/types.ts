@@ -22,6 +22,8 @@ export interface MediaItem {
   type: 'image' | 'video'
   url: string
   caption?: string
+  thumbnail_url?: string
+  thumbnailUrl?: string
 }
 
 export interface TripSegment {

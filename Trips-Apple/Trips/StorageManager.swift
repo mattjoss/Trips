@@ -79,6 +79,13 @@ class StorageManager: ObservableObject {
         metadata.contentType = "image/jpeg"
         _ = try await ref.putDataAsync(imageData, metadata: metadata)
         let url = try await ref.downloadURL()
+
+        if let smallData = resizeImageData(imageData, maxDimension: 640) {
+            let smallPath = "data/trips/\(tripDetails)/cover_640.jpg"
+            let smallRef = storage.reference().child(smallPath)
+            _ = try? await smallRef.putDataAsync(smallData, metadata: metadata)
+        }
+
         return url.absoluteString
     }
 
