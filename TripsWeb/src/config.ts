@@ -5,3 +5,8 @@ export function getTripDetailsUrl(tripDetails: string): string {
   const cleanDetails = tripDetails.replace(/\\/g, '/').replace(/^\/+|\/+$/g, '');
   return `${root}trips/${cleanDetails}/trip.json`;
 }
+
+export function getTripSegmentUrl(tripDetails: string, segmentIndex: number): string {
+  const params = new URLSearchParams({ id: tripDetails, segment: String(segmentIndex + 1) });
+  return `/?${params.toString()}`;
+}

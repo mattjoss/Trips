@@ -2,7 +2,7 @@ import { LitElement, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { keyed } from 'lit/directives/keyed.js';
 import { TripDetails } from '../types';
-import { getTripDetailsUrl } from '../config';
+import { getTripDetailsUrl, getTripSegmentUrl } from '../config';
 import '../components/trip-segment';
 
 @customElement('details-view')
@@ -12,6 +12,7 @@ export class DetailsView extends LitElement {
   }
 
   @property({ type: String }) tripId: string = '';
+  @property({ type: String }) segment: string = '';
 
   @state() private data: TripDetails | null = null;
   @state() private loading: boolean = true;
@@ -22,6 +23,7 @@ export class DetailsView extends LitElement {
     if (changedProperties.has('tripId') && this.tripId) {
       this.fetchDetails(this.tripId);
     }
+    if (changedProperties.has('segment') && this.data) this.syncSelectedSegment();
   }
 
   connectedCallback() {
@@ -32,7 +34,7 @@ export class DetailsView extends LitElement {
   }
 
   async fetchDetails(id: string) {
-    this.selectedSegment = 0;
+    this.selectedSegment = this.segmentIndex;
     this.loading = true;
     this.error = false;
     try {
@@ -40,6 +42,7 @@ export class DetailsView extends LitElement {
       const response = await fetch(url);
       if (!response.ok) throw new Error('Trip not found');
       this.data = await response.json();
+      this.syncSelectedSegment();
     } catch (err) {
       console.error(err);
       this.error = true;
@@ -48,8 +51,20 @@ export class DetailsView extends LitElement {
     }
   }
 
+  private get segmentIndex(): number {
+    const parsed = Number.parseInt(this.segment, 10) - 1;
+    return Number.isInteger(parsed) && parsed >= 0 ? parsed : 0;
+  }
+
+  private syncSelectedSegment() {
+    const count = this.data?.segments.length ?? 0;
+    this.selectedSegment = count ? Math.min(this.segmentIndex, count - 1) : 0;
+  }
+
   private selectSegment(index: number) {
     this.selectedSegment = index;
+    const url = getTripSegmentUrl(this.tripId, index);
+    history.pushState(null, '', url);
     this.querySelector<HTMLElement>(`#segment-tab-${index}`)?.scrollIntoView({
       block: 'nearest', inline: 'nearest',
     });
@@ -107,6 +122,11 @@ export class DetailsView extends LitElement {
               <trip-segment .segment=${this.data.segments[this.selectedSegment]}
                 .hideTitle=${true}></trip-segment>
             `)}
+            ${this.selectedSegment < this.data.segments.length - 1 ? html`
+              <p class="next-segment">Next: <a href=${getTripSegmentUrl(this.tripId, this.selectedSegment + 1)}
+                @click=${(event: Event) => { event.preventDefault(); this.selectSegment(this.selectedSegment + 1); }}
+              >${this.data.segments[this.selectedSegment + 1].name}</a></p>
+            ` : ''}
           </div>
         ` : html`<p class="empty-state">No segments have been added to this trip yet.</p>`}
       </div>

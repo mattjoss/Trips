@@ -13,8 +13,27 @@ export class TripGallery extends LitElement {
 
   @state() private lightboxOpen: boolean = false;
   @state() private lightboxIndex: number = 0;
+  @state() private canScrollPrev = false;
+  @state() private canScrollNext = false;
 
   @query('.gallery-scroll') private scrollContainer?: HTMLElement;
+
+  firstUpdated() {
+    this.updateScrollButtons();
+  }
+
+  private updateScrollButtons() {
+    const container = this.scrollContainer;
+    if (!container) return;
+    const maxScroll = container.scrollWidth - container.clientWidth;
+    this.canScrollPrev = container.scrollLeft > 1;
+    this.canScrollNext = maxScroll - container.scrollLeft > 1;
+  }
+
+  private handleGalleryScroll() {
+    this.scrollContainer?.querySelectorAll('video').forEach((video) => video.pause());
+    this.updateScrollButtons();
+  }
 
   private scrollPrev() {
     if (!this.scrollContainer) return;
@@ -40,8 +59,8 @@ export class TripGallery extends LitElement {
     return html`
       <div class="media-section">
         <div class="gallery-container">
-          <button class="gallery-nav prev" aria-label="Previous image" @click=${this.scrollPrev}>❮</button>
-          <div class="gallery-scroll">
+          ${this.canScrollPrev ? html`<button class="gallery-nav prev" aria-label="Previous image" @click=${this.scrollPrev}>❮</button>` : ''}
+          <div class="gallery-scroll" @scroll=${this.handleGalleryScroll}>
             ${this.media.map(
               (item, index) => html`
                 <div class="gallery-item-wrapper">
@@ -65,7 +84,7 @@ export class TripGallery extends LitElement {
               `
             )}
           </div>
-          <button class="gallery-nav next" aria-label="Next image" @click=${this.scrollNext}>❯</button>
+          ${this.canScrollNext ? html`<button class="gallery-nav next" aria-label="Next image" @click=${this.scrollNext}>❯</button>` : ''}
         </div>
       </div>
 

@@ -51,13 +51,13 @@ export class TripLightbox extends LitElement {
   }
 
   prev() {
-    if (this.items.length === 0) return;
-    this.activeIndex = (this.activeIndex - 1 + this.items.length) % this.items.length;
+    if (this.activeIndex <= 0) return;
+    this.activeIndex -= 1;
   }
 
   next() {
-    if (this.items.length === 0) return;
-    this.activeIndex = (this.activeIndex + 1) % this.items.length;
+    if (this.activeIndex >= this.items.length - 1) return;
+    this.activeIndex += 1;
   }
 
   private handleBackdropClick(e: MouseEvent) {
@@ -75,13 +75,13 @@ export class TripLightbox extends LitElement {
     return html`
       <div class="lightbox-modal fade-in" @click=${this.handleBackdropClick}>
         <button class="lightbox-close" aria-label="Close" @click=${this.close}>×</button>
-        <button class="lightbox-nav prev" aria-label="Previous" @click=${this.prev}>❮</button>
+        ${this.activeIndex > 0 ? html`<button class="lightbox-nav prev" aria-label="Previous" @click=${this.prev}>❮</button>` : ''}
         <div class="lightbox-content">
           ${currentItem.type === 'image'
             ? html`<img src="${currentItem.url}" alt="${caption}" class="lightbox-media fade-in" />`
             : html`<video src="${currentItem.url}" controls class="lightbox-media fade-in"></video>`}
         </div>
-        <button class="lightbox-nav next" aria-label="Next" @click=${this.next}>❯</button>
+        ${this.activeIndex < this.items.length - 1 ? html`<button class="lightbox-nav next" aria-label="Next" @click=${this.next}>❯</button>` : ''}
         <div class="lightbox-caption">${caption}</div>
       </div>
     `;

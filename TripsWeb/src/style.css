@@ -397,6 +397,18 @@ h1, h2, h3, .trip-title {
   /* Container for a day/location segment */
 }
 
+.next-segment {
+  margin-top: var(--spacing-lg);
+  text-align: right;
+  font-size: 1.3rem;
+}
+
+.next-segment a {
+  color: var(--color-accent-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .segment-header {
   margin-bottom: var(--spacing-md);
   display: flex;

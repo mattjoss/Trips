@@ -9,6 +9,7 @@ const heroElement = document.getElementById('hero');
 function router() {
   const urlParams = new URLSearchParams(window.location.search);
   const tripId = urlParams.get('id');
+  const segment = urlParams.get('segment');
   const isAbout = !tripId && urlParams.get('page') === 'about';
   document.querySelector('.about-nav')?.toggleAttribute('aria-current', isAbout);
   if (isAbout) document.querySelector('.about-nav')?.setAttribute('aria-current', 'page');
@@ -19,7 +20,7 @@ function router() {
     appElement.innerHTML = '<about-view></about-view>';
   } else if (tripId) {
     if (heroElement) heroElement.style.display = 'none';
-    appElement.innerHTML = `<details-view tripId="${tripId}"></details-view>`;
+    appElement.innerHTML = `<details-view tripId="${tripId}" segment="${segment ?? ''}"></details-view>`;
   } else {
     if (heroElement) heroElement.style.display = 'flex';
     appElement.innerHTML = `<home-view></home-view>`;
